@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Cờ Vua — Đấu Trường Elo</title>
+<style>
+body { margin:0; background:#0f172a; color:#f8fafc; font-family:Arial,sans-serif; text-align:center; padding:10px; }
+h1 { font-size:18px; margin:8px 0; }
+.top { margin-bottom:8px; }
+.top select, .top button { padding:6px 10px; background:#334155; color:#fff; border:0; border-radius:6px; font-weight:bold; font-size:12px; margin:2px; cursor:pointer; }
+#status { font-weight:bold; margin:6px 0; font-size:13px; color:#e2e8f0; min-height:20px; }
+.wrap { width:320px; height:320px; margin:0 auto; background:#111827; border:4px solid #111827; border-radius:6px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.6); font-size:0; }
+.sq { width:40px; height:40px; display:inline-block; vertical-align:top; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:30px; outline:none; }
+.light { background:#f0d9b5; }
+.dark { background:#b58863; }
+.sq.selected { background:#facc15 !important; }
+.sq.last { box-shadow:inset 0 0 0 3px #3b82f6; }
+.sq.hint:after { content:""; position:absolute; top:13px; left:13px; width:14px; height:14px; border-radius:50%; background:#22c55e; z-index:5; }
+.sq.capture:after { content:""; position:absolute; inset:4px; border:4px solid #ef4444; border-radius:50%; z-index:5; }
+.whitePiece { color:#fff; text-shadow:0 2px 2px #000, 0 0 2px #000; position:relative; z-index:2; }
+.blackPiece { color:#111; text-shadow:0 1px 0 #777, 0 0 2px #fff; position:relative; z-index:2; }
+
+.move-badge { position:absolute; top:1px; right:1px; font-size:8px; font-weight:900; padding:1px 3px; border-radius:3px; z-index:10; color:#fff; }
+.badge-genius { background:#06b6d4; }
+.badge-great { background:#3b82f6; }
+.badge-good { background:#10b981; }
+.badge-inaccuracy { background:#ef4444; }
+.badge-blunder { background:#991b1b; }
+
+.history-wrap { width:320px; margin:8px auto; }
+#history-box { width:100%; height:45px; background:#1e293b; border:1px solid #475569; border-radius:6px; padding:4px; font-size:11px; color:#cbd5e1; overflow-y:auto; text-align:left; }
+.panel { margin-top:6px; font-size:11px; color:#94a3b8; }
+</style>
+</head>
+<body>
+
+<h1>♟️ CỜ VUA — ĐẤU TRƯỜNG ELO</h1>
+<div class="top">
+    <select id="elo">
+        <option value="300">300 Elo (Người mới)</option>
+        <option value="700" selected>700 Elo (Pro player)</option>
+        <option value="1300">1300 Elo (Kiện tướng 🤫)</option>
+        <option value="1700">1700 Elo (Đại kiện tướng 💀)</option>
+    </select>
+    <button onclick="undo()">↩ Đi lại</button>
+    <button onclick="resetGame()">🔄 Chơi lại</button>
+</div>
+
+<div id="status">Lượt của bạn (Trắng)</div>
+
+<div class="wrap" id="board">
+    <script>
+        for(var r=0; r<8; r++) {
+            for(var c=0; c<8; c++) {
+                var isDark = (r + c) % 2 === 1;
+                document.write('<button id="sq_'+r+'_'+c+'" class="sq ' + (isDark ? 'dark' : 'light') + '" onclick="clickSq('+r+','+c+')"></button>');
+            }
+        }
+    </script>
+</div>
+
+<div class="history-wrap"><div id="history-box">Lịch sử nước đi...</div></div>
+<div class="panel">⚪ Bạn: Trắng | ⚫ Máy: Đen</div>
+
+<script>
+var ICON = {P:'♙', N:'♘', B:'♗', R:'♖', Q:'♕', K:'♔', p:'♟', n:'♞', b:'♝', r:'♜', q:'♛', k:'♚'};
+var VALUE = {P:100, N:320, B:330, R:500, Q:900, K:20000};
+var KN = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+var DIRB = [[1,1],[1,-1],[-1,1],[-1,-1]], DIRR = [[1,0],[-1,0],[0,1],[0,-1]];
+
+var board, turn, selected = null, history = [], castle = {K:true, Q:true, k:true, q:true}, ep = null, gameOver = false, historyText = [], lastMove = null, currentEvalBadge = null;
+
+function initBoard() {
+    return [
+        ['r','n','b','q','k','b','n','r'],
+        ['p','p','p','p','p','p','p','p'],
+        [null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null],
+        ['P','P','P','P','P','P','P','P'],
+        ['R','N','B','Q','K','B','N','R']
+    ];
+}
+
+function resetGame() {
+    board = initBoard();
+    turn = 'w';
+    selected = null;
+    history = [];
+    castle = {K:true, Q:true, k:true, q:true};
+    ep = null;
+    gameOver = false;
+    historyText = [];
+    lastMove = null;
+    currentEvalBadge = null;
+    render();
+}
+
+function col(p) { return p ? (p === p.toUpperCase() ? 'w' : 'b') : null; }
+function inside(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+
+function cloneBoard(b) {
+    var nb = [];
+    for(var r=0; r<8; r++) {
+        var row = [];
+        for(var c=0; c<8; c++) row.push(b[r][c]);
+        nb.push(row);
+    }
+    return nb;
+}
+
+function kingPos(b, c) {
+    var target = c === 'w' ? 'K' : 'k';
+    for(var r=0; r<8; r++) {
+        for(var cc=0; cc<8; cc++) {
+            if(b[r][cc] === target) return [r, cc];
+        }
+    }
+    return null;
+}
+
+function attacked(b, r, c, by) {
+    for(var rr=0; rr<8; rr++) {
+        for(var cc=0; cc<8; cc++) {
+            var p = b[rr][cc];
+            if(!p || col(p) !== by) continue;
+            var t = p.toUpperCase(), dr = r - rr, dc = c - cc;
+            if(t === 'P') { var d = by === 'w' ? -1 : 1; if(dr === d && Math.abs(dc) === 1) return true; }
+            if(t === 'N') {
+                for(var i=0; i<KN.length; i++) if(KN[i][0] === dr && KN[i][1] === dc) return true;
+            }
+            if(t === 'K' && Math.max(Math.abs(dr), Math.abs(dc)) === 1) return true;
+            var dirs = t === 'B' ? DIRB : t === 'R' ? DIRR : t === 'Q' ? DIRB.concat(DIRR) : null;
+            if(dirs) {
+                for(var i=0; i<dirs.length; i++) {
+                    var sr = dirs[i][0], sc = dirs[i][1];
+                    var a = rr + sr, d = cc + sc;
+                    while(inside(a, d)) {
+                        if(a === r && d === c) return true;
+                        if(b[a][d]) break;
+                        a += sr; d += sc;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function check(b, c) {
+    var k = kingPos(b, c);
+    return !k || attacked(b, k[0], k[1], c === 'w' ? 'b' : 'w');
+}
+
+function pseudoMoves(b, r, c) {
+    var p = b[r][c], co = col(p), out = [];
+    if(!p) return out;
+    var t = p.toUpperCase();
+    
+    if(t === 'P') {
+        var d = (co === 'w') ? -1 : 1;
+        var start = (co === 'w') ? 6 : 1;
+        if(inside(r + d, c) && !b[r + d][c]) {
+            out.push([r + d, c]);
+            if(r === start && !b[r + 2 * d][c]) out.push([r + 2 * d, c]);
+        }
+        var dcs = [-1, 1];
+        for(var i=0; i<dcs.length; i++) {
+            var dc = dcs[i];
+            var rr = r + d, cc = c + dc;
+            if(inside(rr, cc) && b[rr][cc] && col(b[rr][cc]) !== co) out.push([rr, cc]);
+            if(ep && ep[0] === rr && ep[1] === cc) out.push([rr, cc]);
+        }
+    } else if(t === 'N') {
+        for(var i=0; i<KN.length; i++) {
+            var rr = r + KN[i][0], cc = c + KN[i][1];
+            if(inside(rr, cc) && col(b[rr][cc]) !== co) out.push([rr, cc]);
+        }
+    } else if(t === 'B' || t === 'R' || t === 'Q') {
+        var dirs = t === 'B' ? DIRB : t === 'R' ? DIRR : DIRB.concat(DIRR);
+        for(var i=0; i<dirs.length; i++) {
+            var dr = dirs[i][0], dc = dirs[i][1];
+            var rr = r + dr, cc = c + dc;
+            while(inside(rr, cc)) {
+                if(!b[rr][cc]) {
+                    out.push([rr, cc]);
+                } else {
+                    if(col(b[rr][cc]) !== co) out.push([rr, cc]);
+                    break;
+                }
+                rr += dr; cc += dc;
+            }
+        }
+    } else if(t === 'K') {
+        for(var dr=-1; dr<=1; dr++) {
+            for(var dc=-1; dc<=1; dc++) {
+                if(!dr && !dc) continue;
+                var rr = r + dr, cc = c + dc;
+                if(inside(rr, cc) && col(b[rr][cc]) !== co) out.push([rr, cc]);
+            }
+        }
+    }
+    return out;
+}
+
+function _applyMove(b, r, c, rr, cc, co, cast, eps) {
+    var nb = cloneBoard(b), p = nb[r][c], t = p.toUpperCase(), dest = nb[rr][cc];
+    nb[r][c] = null;
+    nb[rr][cc] = p;
+    var nep = null, ncast = {K:cast.K, Q:cast.Q, k:cast.k, q:cast.q};
+    
+    if(t === 'P' && eps && rr === eps[0] && cc === eps[1] && !dest) nb[rr + (co === 'w' ? 1 : -1)][cc] = null;
+    if(t === 'P' && Math.abs(rr - r) === 2) nep = [(r + rr) / 2, c];
+    return {board: nb, castle: ncast, ep: nep};
+}
+
+function legalMoves(b, r, c, co, cast, eps) {
+    var pms = pseudoMoves(b, r, c), out = [];
+    for(var i=0; i<pms.length; i++) {
+        var rr = pms[i][0], cc = pms[i][1];
+        var z = _applyMove(b, r, c, rr, cc, co, cast, eps);
+        if(!check(z.board, co)) out.push([rr, cc]);
+    }
+    return out;
+}
+
+function getAllMoves(b, co, cast, eps) {
+    var list = [];
+    for(var r=0; r<8; r++) {
+        for(var c=0; c<8; c++) {
+            if(col(b[r][c]) === co) {
+                var mvs = legalMoves(b, r, c, co, cast, eps);
+                for(var i=0; i<mvs.length; i++) list.push([r, c, mvs[i][0], mvs[i][1]]);
+            }
+        }
+    }
+    return list;
+}
+
+function evaluateQuality(diff) {
+    if (diff > 200) return { text: 'Thiên tài', type: 'badge-genius' };
+    if (diff > 50)  return { text: 'Hay đấy', type: 'badge-great' };
+    if (diff > -50) return { text: 'Ổn', type: 'badge-good' };
+    if (diff > -200)return { text: 'Chưa hay', type: 'badge-inaccuracy' };
+    return { text: 'Sai lầm', type: 'badge-blunder' };
+}
+
+function render() {
+    var hints = selected ? legalMoves(board, selected[0], selected[1], turn, castle, ep) : [];
+
+    for(var r=0; r<8; r++) {
+        for(var c=0; c<8; c++) {
+            var sq = document.getElementById('sq_' + r + '_' + c);
+            var isDark = (r + c) % 2 === 1;
+            var cls = 'sq ' + (isDark ? 'dark' : 'light');
+            
+            if(selected && selected[0] === r && selected[1] === c) cls += ' selected';
+            if(lastMove && ((lastMove[0] === r && lastMove[1] === c) || (lastMove[2] === r && lastMove[3] === c))) cls += ' last';
+            
+            var isHint = false, isCap = false;
+            for(var i=0; i<hints.length; i++) {
+                if(hints[i][0] === r && hints[i][1] === c) {
+                    if(board[r][c]) isCap = true; else isHint = true;
+                }
+            }
+            if(isHint) cls += ' hint';
+            if(isCap) cls += ' capture';
+
+            sq.className = cls;
+            
+            var htmlContent = '';
+            if(board[r][c]) {
+                var pCol = col(board[r][c]) === 'w' ? 'whitePiece' : 'blackPiece';
+                htmlContent += '<span class="' + pCol + '">' + ICON[board[r][c]] + '</span>';
+            }
+
+            if(currentEvalBadge && currentEvalBadge.pos[0] === r && currentEvalBadge.pos[1] === c) {
+                htmlContent += '<div class="move-badge ' + currentEvalBadge.type + '">' + currentEvalBadge.text + '</div>';
+            }
+
+            sq.innerHTML = htmlContent;
+        }
+    }
+    
+    var inCheck = check(board, turn);
+    var allMvs = getAllMoves(board, turn, castle, ep);
+    gameOver = allMvs.length === 0;
+    
+    var st = document.getElementById('status');
+    if(gameOver) {
+        st.textContent = inCheck ? '♚ CHIẾU HẾT! ' + (turn === 'w' ? 'Máy thắng.' : 'Bạn thắng!') : '🤝 HÒA cờ!';
+    } else if(inCheck) {
+        st.textContent = '⚠️ ' + (turn === 'w' ? 'Bạn' : 'Máy') + ' đang bị chiếu!';
+    } else {
+        st.textContent = turn === 'w' ? 'Lượt của bạn (Trắng)' : 'Lượt của máy (Đen)...';
+    }
+
+    document.getElementById('history-box').textContent = historyText.length ? historyText.join(', ') : 'Lịch sử nước đi...';
+}
+
+function clickSq(r, c) {
+    if(gameOver || turn !== 'w') return;
+    if(selected) {
+        var mvs = legalMoves(board, selected[0], selected[1], turn, castle, ep);
+        var valid = false;
+        for(var i=0; i<mvs.length; i++) {
+            if(mvs[i][0] === r && mvs[i][1] === c) valid = true;
+        }
+        if(valid) {
+            commitMove(selected[0], selected[1], r, c);
+            return;
+        }
+    }
+    if(col(board[r][c]) === 'w') {
+        selected = [r, c];
+        render();
+    } else {
+        selected = null;
+        render();
+    }
+}
+
+function commitMove(r, c, rr, cc) {
+    history.push({ board: cloneBoard(board), turn: turn, castle: {K:castle.K, Q:castle.Q, k:castle.k, q:castle.q}, ep: ep?[...ep]:null, lastMove: lastMove?[...lastMove]:null, historyText: historyText.slice() });
+    var piece = board[r][c];
+    
+    var beforeEval = evaluate(board);
+    var z = _applyMove(board, r, c, rr, cc, turn, castle, ep);
+    var afterEval = evaluate(z.board);
+    var diff = turn === 'w' ? (afterEval - beforeEval) : (beforeEval - afterEval);
+    
+    currentEvalBadge = { pos: [rr, cc], text: evaluateQuality(diff).text, type: evaluateQuality(diff).type };
+
+    board = z.board; castle = z.castle; ep = z.ep;
+    lastMove = [r, c, rr, cc];
+    
+    historyText.push(piece.toUpperCase() + (cc + 1) + (8 - rr));
+    selected = null;
+    turn = turn === 'w' ? 'b' : 'w';
+    render();
+    if(!gameOver && turn === 'b') setTimeout(aiMove, 150);
+}
+
+function evaluate(b) {
+    var score = 0;
+    for(var r=0; r<8; r++) {
+        for(var c=0; c<8; c++) {
+            var p = b[r][c];
+            if(p) score += (col(p) === 'b' ? 1 : -1) * VALUE[p.toUpperCase()];
+        }
+    }
+    return score;
+}
+
+function minimax(b, depth, isMax, alpha, beta, cast, eps) {
+    var co = isMax ? 'b' : 'w';
+    var moves = getAllMoves(b, co, cast, eps);
+    if(depth === 0 || moves.length === 0) return evaluate(b);
+
+    if(isMax) {
+        var maxEval = -Infinity;
+        for(var i=0; i<moves.length; i++) {
+            var m = moves[i];
+            var z = _applyMove(b, m[0], m[1], m[2], m[3], 'b', cast, eps);
+            var ev = minimax(z.board, depth - 1, false, alpha, beta, z.castle, z.ep);
+            if(ev > maxEval) maxEval = ev;
+            if(maxEval > alpha) alpha = maxEval;
+            if(beta <= alpha) break;
+        }
+        return maxEval;
+    } else {
+        var minEval = Infinity;
+        for(var i=0; i<moves.length; i++) {
+            var m = moves[i];
+            var z = _applyMove(b, m[0], m[1], m[2], m[3], 'w', cast, eps);
+            var ev = minimax(z.board, depth - 1, true, alpha, beta, z.castle, z.ep);
+            if(ev < minEval) minEval = ev;
+            if(minEval < beta) beta = minEval;
+            if(beta <= alpha) break;
+        }
+        return minEval;
+    }
+}
+
+function aiMove() {
+    var moves = getAllMoves(board, 'b', castle, ep);
+    if(!moves.length) { gameOver = true; render(); return; }
+
+    var eloEl = document.getElementById('elo');
+    var elo = eloEl ? parseInt(eloEl.value) : 700;
+    var depth = elo <= 300 ? 1 : elo <= 700 ? 2 : elo <= 1300 ? 3 : 4;
+
+    var bestMove = moves[0], maxEval = -Infinity;
+    for(var i=0; i<moves.length; i++) {
+        var m = moves[i];
+        var z = _applyMove(board, m[0], m[1], m[2], m[3], 'b', castle, ep);
+        var ev = minimax(z.board, depth - 1, false, -Infinity, Infinity, z.castle, z.ep);
+        if(ev > maxEval) { maxEval = ev; bestMove = m; }
+    }
+
+    var p = board[bestMove[0]][bestMove[1]];
+    var beforeEval = evaluate(board);
+    var z = _applyMove(board, bestMove[0], bestMove[1], bestMove[2], bestMove[3], 'b', castle, ep);
+    var afterEval = evaluate(z.board);
+    var diff = afterEval - beforeEval;
+
+    currentEvalBadge = { pos: [bestMove[2], bestMove[3]], text: evaluateQuality(diff).text, type: evaluateQuality(diff).type };
+
+    board = z.board; castle = z.castle; ep = z.ep;
+    lastMove = [bestMove[0], bestMove[1], bestMove[2], bestMove[3]];
+    historyText.push(p.toUpperCase() + (bestMove[3] + 1) + (8 - bestMove[2]));
+    
+    turn = 'w';
+    render();
+}
+
+function undo() {
+    if(!history.length) return;
+    var last = history.pop();
+    board = last.board; turn = last.turn; castle = last.castle; ep = last.ep; lastMove = last.lastMove; historyText = last.historyText;
+    selected = null; currentEvalBadge = null;
+    render();
+}
+
+resetGame();
+</script>
+</body>
+</html>
+
