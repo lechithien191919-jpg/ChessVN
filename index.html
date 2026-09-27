@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Cờ vua AI — Master Edition with Move Eval</title>
+<title>Cờ vua AI — Master Edition fixed</title>
 <style>
 :root{
   --bg:#07111f;--panel:rgba(15,27,45,.78);--panel2:rgba(30,41,59,.88);
@@ -49,11 +49,10 @@ h1{font-size:25px;margin:5px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
 .whitePiece{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .blackPiece{color:#111;text-shadow:0 1px 2px rgba(255,255,255,.6)}
 
-/* Hiệu ứng nhãn đánh giá nước đi bay lên */
 .eval-badge-popup{
-  position:absolute;z-index:30;padding:4px 10px;border-radius:8px;font-weight:800;
+  position:absolute;z-index:30;padding:5px 12px;border-radius:8px;font-weight:800;
   font-size:13px;pointer-events:none;transform:translate(-50%,-50%) scale(0.8);
-  animation:popEval 1.2s ease forwards;box-shadow:0 4px 15px rgba(0,0,0,0.4);
+  animation:popEval 1.2s ease forwards;box-shadow:0 4px 15px rgba(0,0,0,0.5);
   white-space:nowrap;
 }
 @keyframes popEval{
@@ -301,17 +300,16 @@ function render(){
 }
 
 function showMoveEvalBadge(rr, cc, delta, isWhite){
-  // isWhite: True nếu là người chơi Trắng đi, False nếu là Máy đi
-  // delta tính theo góc nhìn của người vừa đi
   let diff = isWhite ? delta : -delta;
   let text = 'Ổn đấy';
-  let color = '#38bdf8'; // xanh dương nhẹ
+  let color = '#38bdf8'; 
   let bg = 'rgba(14, 116, 144, 0.9)';
 
-  if(diff >= 180){ text = '🌟 Thiên tài'; color = '#facc15'; bg = 'rgba(161, 98, 7, 0.9)'; }
-  else if(diff >= 40){ text = '🔥 Vip đó bro'; color = '#4ade80'; bg = 'rgba(21, 128, 61, 0.9)'; }
-  else if(diff >= -40){ text = '👍 Ổn đấy'; color = '#38bdf8'; bg = 'rgba(14, 116, 144, 0.9)'; }
-  else if(diff >= -200){ text = '😅 Chưa tày đâu'; color = '#fbbf24'; bg = 'rgba(180, 83, 9, 0.9)'; }
+  // Logic đánh giá chuẩn kiểu chess.com qua độ lệch điểm
+  if(diff >= 150){ text = '🌟 Thiên tài'; color = '#facc15'; bg = 'rgba(161, 98, 7, 0.9)'; }
+  else if(diff >= 30){ text = '🔥 Vip đó bro'; color = '#4ade80'; bg = 'rgba(21, 128, 61, 0.9)'; }
+  else if(diff >= -30){ text = '👍 Ổn đấy'; color = '#38bdf8'; bg = 'rgba(14, 116, 144, 0.9)'; }
+  else if(diff >= -150){ text = '😅 Chưa tày đâu'; color = '#fbbf24'; bg = 'rgba(180, 83, 9, 0.9)'; }
   else { text = '💀 Thiên Tai'; color = '#f87171'; bg = 'rgba(185, 28, 28, 0.9)'; }
 
   const boardEl = document.getElementById('board');
@@ -325,7 +323,6 @@ function showMoveEvalBadge(rr, cc, delta, isWhite){
   badge.style.backgroundColor = bg;
   badge.style.border = `1px solid ${color}`;
   
-  // Tính tọa độ pixel tương đối trên bàn cờ
   let left = (cc + 0.5) * sqWidth;
   let top = (rr + 0.5) * sqHeight;
   badge.style.left = left + 'px';
@@ -361,11 +358,10 @@ function commit(r,c,rr,cc,promo){
  
  let scoreAfter = evaluate(board);
  let delta = scoreAfter - scoreBefore;
- let currentTurnColor = turn; // Lưu lại lượt hiện tại trước khi đổi lượt
+ let currentTurnColor = turn;
 
  turn=opp(turn);selected=null;render();
 
- // Hiện nhãn đánh giá nước đi cho người chơi Trắng
  if(currentTurnColor === 'w') {
    showMoveEvalBadge(rr, cc, delta, true);
  }
@@ -394,4 +390,12 @@ function orderMoves(b, moves) {
   });
 }
 
-function minimaxAI(b,co,depth,alpha,beta,cas
+function minimaxAI(b,co,depth,alpha,beta,cast,eps){
+ let moves=allMoves(b,co,cast,eps);
+ if(depth===0)return evaluate(b);
+ if(!moves.length)return check(b,co)?(co==='b'?-99999:99999):0;
+ moves = orderMoves(b, moves);
+ 
+ // Sửa lỗi chiều tối ưu hóa Minimax cho quân Đen (max) và Trắng (min)
+ if(co==='b'){
+  let b
