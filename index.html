@@ -11,7 +11,7 @@ h1 { font-size:18px; margin:8px 0; }
 .top select, .top button { padding:6px 10px; background:#334155; color:#fff; border:0; border-radius:6px; font-weight:bold; font-size:12px; margin:2px; cursor:pointer; }
 #status { font-weight:bold; margin:6px 0; font-size:13px; color:#e2e8f0; min-height:20px; }
 .wrap { width:320px; height:320px; margin:0 auto; background:#111827; border:4px solid #111827; border-radius:6px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.6); font-size:0; }
-.sq { width:40px; height:40px; display:inline-block; vertical-align:top; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:30px; outline:none; }
+.sq { width:40px; height:40px; display:inline-block; vertical-align:top; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:30px; outline:none; -webkit-tap-highlight-color: transparent; }
 .light { background:#f0d9b5; }
 .dark { background:#b58863; }
 .sq.selected { background:#facc15 !important; }
@@ -54,7 +54,7 @@ h1 { font-size:18px; margin:8px 0; }
         for(var r=0; r<8; r++) {
             for(var c=0; c<8; c++) {
                 var isDark = (r + c) % 2 === 1;
-                document.write('<button id="sq_'+r+'_'+c+'" class="sq ' + (isDark ? 'dark' : 'light') + '" onclick="clickSq('+r+','+c+')"></button>');
+                document.write('<button id="sq_'+r+'_'+c+'" class="sq ' + (isDark ? 'dark' : 'light') + '" onclick="clickSq('+r+','+c+')" ontouchstart="clickSq('+r+','+c+'); event.preventDefault();"></button>');
             }
         }
     </script>
@@ -428,4 +428,3 @@ resetGame();
 </script>
 </body>
 </html>
-
