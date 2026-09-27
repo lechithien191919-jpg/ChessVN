@@ -3,54 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Cờ vua AI — Python Flask Modular Master</title>
+<title>Cờ Vua AI Master</title>
 <style>
 :root{
-  --bg:#07111f;--panel:rgba(15,27,45,.78);--panel2:rgba(30,41,59,.88);
+  --bg:#07111f;--panel:rgba(15,27,45,.88);--panel2:rgba(30,41,59,.92);
   --light:#f3e5c8;--dark:#8b6848;--gold:#f7c948;--green:#35d07f;--red:#ff5d6c;
-  --text:#f8fafc;--muted:#a9b8ca;--line:rgba(255,255,255,.10);
+  --text:#f8fafc;--muted:#a9b8ca;--line:rgba(255,255,255,.12);
 }
 *{box-sizing:border-box}
 body{
-  margin:0;min-height:100vh;padding:15px 10px 25px;color:var(--text);
+  margin:0;min-height:100vh;padding:10px;color:var(--text);
   font-family:Inter,system-ui,-apple-system,sans-serif;text-align:center;
-  background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.20),transparent 32%),linear-gradient(145deg,#050b14,#0d1b2d 55%,#08111e);
+  background:radial-gradient(circle at 15% 0%,rgba(59,130,246,.25),transparent 35%),linear-gradient(145deg,#050b14,#0d1b2d 55%,#08111e);
 }
-h1{font-size:25px;margin:5px 0 10px}
-.app{width:min(720px,100%);margin:auto}
-.top,.stats{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+h1{font-size:22px;margin:5px 0}
+.app{width:min(600px,100%);margin:auto}
+.top{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .top button,.top select{
-  border:1px solid var(--line);border-radius:10px;padding:8px 12px;
-  background:var(--panel2);color:#fff;font-weight:700;cursor:pointer
+  border:1px solid var(--line);border-radius:8px;padding:6px 10px;
+  background:var(--panel2);color:#fff;font-weight:700;cursor:pointer;font-size:13px
 }
+.eval-container{width:100%;margin:5px auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.eval-bar-bg{width:100%;height:6px;background:#1e293b;border-radius:3px;overflow:hidden;margin-top:4px}
+#evalBarFill{width:50%;background:#f8fafc;height:100%;transition:width 0.3s}
 #status{
-  min-height:26px;margin:5px auto 10px;padding:6px 12px;width:fit-content;max-width:95%;
-  border:1px solid var(--line);border-radius:999px;background:rgba(15,23,42,.65);font-size:13px;font-weight:700
+  margin:5px auto;padding:5px 10px;width:fit-content;max-width:95%;
+  border:1px solid var(--line);border-radius:999px;background:rgba(15,23,42,.75);font-size:12px;font-weight:700
 }
-.wrap{width:min(520px,100%);margin:0 auto;position:relative}
+.wrap{width:min(450px,100%);margin:0 auto;position:relative}
 .board{
   width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);
-  grid-template-rows:repeat(8,1fr);border:6px solid #172235;border-radius:14px;
-  overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.45);background:#172235;position:relative
+  grid-template-rows:repeat(8,1fr);border:4px solid #172235;border-radius:12px;
+  overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5);background:#172235
 }
-.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer}
 .light{background:var(--light)} .dark{background:var(--dark)}
 .sq.selected{box-shadow:inset 0 0 0 4px var(--gold);z-index:2}
-.sq.hint:after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:var(--green)}
-.sq.capture:after{content:"";position:absolute;inset:5px;border:3px solid var(--red);border-radius:50%}
-.sq.last{box-shadow:inset 0 0 0 3px rgba(80,170,255,.65)}
-.piece{font-size:clamp(28px,7.5vw,50px);line-height:1;z-index:1}
-.whitePiece{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
-.blackPiece{color:#111;text-shadow:0 1px 2px rgba(255,255,255,.6)}
-
-.eval-container{width:min(520px,100%);margin:8px auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-.eval-bar-bg{width:100%;height:8px;background:#1e293b;border-radius:4px;overflow:hidden;margin-top:5px}
-#evalBarFill{width:50%;background:#f8fafc;transition:width 0.3s}
-.stats{margin:10px auto 5px;max-width:520px}
-.badge{min-width:130px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:12px}
-#promo{position:fixed;z-index:40;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center}
-.modal{background:#101c2e;border:1px solid #40506a;border-radius:15px;padding:16px}
-.promos{display:flex;gap:8px}.promos button{width:55px;height:55px;font-size:35px;background:#26364d;border-radius:10px;cursor:pointer;color:#fff}
+.sq.last{box-shadow:inset 0 0 0 3px rgba(80,170,255,.7)}
+.piece{font-size:clamp(26px,7vw,42px);line-height:1;z-index:1}
+.whitePiece{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.blackPiece{color:#111;text-shadow:0 1px 2px rgba(255,255,255,.7)}
+.stats{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.badge{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:11px}
+#promo{position:fixed;z-index:40;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center}
+.modal{background:#101c2e;border:1px solid #40506a;border-radius:12px;padding:14px}
+.promos{display:flex;gap:6px}.promos button{width:50px;height:50px;font-size:30px;background:#26364d;border-radius:8px;cursor:pointer;color:#fff}
 </style>
 </head>
 <body>
@@ -68,7 +65,7 @@ h1{font-size:25px;margin:5px 0 10px}
 </div>
 
 <div class="eval-container">
-  <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:bold">
+  <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:bold">
     <span>📊 Thế trận</span><span id="evalText">Cân bằng (0.0)</span>
   </div>
   <div class="eval-bar-bg"><div id="evalBarFill"></div></div>
@@ -78,16 +75,16 @@ h1{font-size:25px;margin:5px 0 10px}
 <div class="wrap"><div id="board" class="board"></div></div>
 
 <div class="stats">
-  <div class="badge">⚪ Bạn: Trắng<strong id="playerElo">ELO 1000</strong></div>
-  <div class="badge">🤖 Máy: Đen<strong id="aiElo">ELO 1200</strong></div>
+  <div class="badge">⚪ Bạn: Trắng</div>
+  <div class="badge">🤖 Máy: Đen</div>
 </div>
 </div>
 
-<div id="promo"><div class="modal"><h2>Chọn quân phong cấp</h2><div id="promos" class="promos"></div></div></div>
+<div id="promo"><div class="modal"><h3 style="margin-top:0">Chọn quân phong cấp</h3><div id="promos" class="promos"><button>♕</button><button>♖</button><button>♗</button><button>♘</button></div></div></div>
 
 <script>
 const ICON={P:'♙',N:'♘',B:'♗',R:'♖',Q:'♕',K:'♔',p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
-let board, turn, selected=null, history=[], castle, ep, pendingPromo=null, lastMove=null, gameOver=false, thinking=false;
+let board, turn, selected=null, history=[], castle, ep, pendingPromo=null, lastMove=null, thinking=false;
 
 function initialBoard(){
   return [
@@ -111,7 +108,6 @@ function resetGame(){
   ep = null;
   pendingPromo = null;
   lastMove = null;
-  gameOver = false;
   thinking = false;
   document.getElementById('promo').style.display = 'none';
   render();
@@ -139,14 +135,13 @@ function render(){
       el.appendChild(sq);
     }
   }
-  document.getElementById('status').textContent = thinking ? '🤖 Máy đang suy nghĩ...' : (turn === 'w' ? '⚪ Lượt của bạn' : '⚫ Lượt của máy');
+  document.getElementById('status সন্ত্রাসী' || 'status').textContent = thinking ? '🤖 Máy đang suy nghĩ...' : (turn === 'w' ? '⚪ Lượt của bạn (Chọn quân Trắng để đi)' : '⚫ Lượt của máy');
 }
 
 function clickSq(r, c){
-  if(gameOver || thinking || turn !== 'w') return;
+  if(thinking || turn !== 'w') return;
   if(selected){
     if(selected[0] === r && selected[1] === c){ selected = null; render(); return; }
-    // Thực hiện nước đi người chơi
     humanMove(selected[0], selected[1], r, c);
     return;
   }
@@ -187,7 +182,6 @@ function commitMove(r, c, rr, cc, promo){
   turn = 'b';
   render();
 
-  // Gửi request lên Backend Flask để AI tính toán nước đi
   thinking = true;
   render();
 
@@ -208,6 +202,10 @@ function commitMove(r, c, rr, cc, promo){
     }
     turn = 'w';
     render();
+  }).catch(err => {
+    thinking = false;
+    turn = 'w';
+    render();
   });
 }
 
@@ -221,7 +219,6 @@ document.getElementById('undo').onclick = () => {
   turn = last.turn;
   selected = null;
   lastMove = null;
-  gameOver = false;
   render();
 };
 
@@ -229,3 +226,4 @@ resetGame();
 </script>
 </body>
 </html>
+
