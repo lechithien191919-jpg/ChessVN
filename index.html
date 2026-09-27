@@ -1,453 +1,341 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Cờ Vua — Đấu Trường Elo</title>
+<title>Cờ vua — AI Fixed & Enhanced</title>
 <style>
-body { margin:0; background:#0f172a; color:#f8fafc; font-family:Arial,sans-serif; text-align:center; padding:10px; user-select:none; -webkit-user-select:none; }
-h1 { font-size:18px; margin:8px 0; }
-.top { margin-bottom:8px; }
-.top select, .top button { padding:6px 10px; background:#334155; color:#fff; border:0; border-radius:6px; font-weight:bold; font-size:12px; margin:2px; cursor:pointer; }
-#status { font-weight:bold; margin:6px 0; font-size:13px; color:#e2e8f0; min-height:20px; }
-.wrap { width:320px; height:320px; margin:0 auto; background:#111827; border:4px solid #111827; border-radius:6px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.6); display:flex; flex-wrap:wrap; }
-.sq { width:40px; height:40px; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:28px; outline:none; -webkit-tap-highlight-color: transparent; }
-.light { background:#f0d9b5; }
-.dark { background:#b58863; }
-.sq.selected { background:#facc15 !important; }
-.sq.last { box-shadow:inset 0 0 0 3px #3b82f6; }
+:root{
+  --bg:#07111f;--panel:rgba(15,27,45,.78);--panel2:rgba(30,41,59,.88);
+  --light:#f3e5c8;--dark:#8b6848;--gold:#f7c948;--green:#35d07f;--red:#ff5d6c;
+  --text:#f8fafc;--muted:#a9b8ca;--line:rgba(255,255,255,.10);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;padding:14px 10px 28px;color:var(--text);
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:center;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(59,130,246,.20),transparent 32%),
+    radial-gradient(circle at 85% 10%,rgba(168,85,247,.16),transparent 30%),
+    linear-gradient(145deg,#050b14,#0d1b2d 55%,#08111e);
+}
+h1{font-size:24px;letter-spacing:.5px;margin:4px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
+.app{width:min(720px,100%);margin:auto}
+.top,.panel,.stats{
+  display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap
+}
+.top{margin:0 auto 8px}
+.top button,.top select{
+  border:1px solid var(--line);border-radius:12px;padding:8px 12px;
+  background:var(--panel2);color:#fff;font-weight:750;cursor:pointer;
+  box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(10px);font-size:12px;
+}
+.top button:hover,.top select:hover{background:#3a4a61}
+.top button:active{transform:translateY(1px) scale(.98)}
+#status{
+  min-height:26px;margin:5px auto 8px;padding:6px 12px;width:fit-content;max-width:95%;
+  border:1px solid var(--line);border-radius:999px;background:rgba(15,23,42,.65);
+  color:#e6edf7;font-size:13px;font-weight:750
+}
+.wrap{width:min(420px,100%);margin:0 auto;padding:0 7px}
+.board{
+  width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(8,1fr);border:6px solid #172235;border-radius:14px;
+  overflow:hidden;box-shadow:0 20px 55px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.08);
+  background:#172235
+}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%;-webkit-tap-highlight-color:transparent;}
+.light{background:var(--light)} .dark{background:var(--dark)}
+.sq.selected{box-shadow:inset 0 0 0 4px var(--gold),inset 0 0 24px rgba(247,201,72,.25);z-index:2}
+.sq.hint:after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--green);opacity:.9;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:3;pointer-events:none;}
+.sq.capture:after{content:"";position:absolute;inset:5px;border:4px solid var(--red);border-radius:50%;box-shadow:0 0 10px rgba(255,93,108,.25);z-index:3;pointer-events:none;}
+.sq.last{box-shadow:inset 0 0 0 4px rgba(80,170,255,.65),inset 0 0 18px rgba(80,170,255,.16)}
+.piece{font-size:clamp(28px,7vw,42px);font-family:"Arial Unicode MS","Segoe UI Symbol",serif;user-select:none;line-height:1;z-index:1;pointer-events:none;}
+.whitePiece{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35),0 0 1px rgba(0,0,0,.2)}
+.blackPiece{color:#050505;text-shadow:0 1px 0 #777,0 0 2px #fff}
 
-/* Dấu chấm tròn và viền ăn quân hiển thị đè lên trên */
-.sq.hint:after { content:""; position:absolute; top:13px; left:13px; width:14px; height:14px; border-radius:50%; background:#22c55e; z-index:10; pointer-events:none; }
-.sq.capture:after { content:""; position:absolute; inset:4px; border:4px solid #ef4444; border-radius:50%; z-index:10; pointer-events:none; }
+/* Khung lịch sử nước đi */
+.history-container{width:min(420px,100%);margin:8px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:left;}
+.history-title{font-size:11px;color:var(--muted);font-weight:bold;margin-bottom:2px;}
+#history-box{font-size:12px;color:#cbd5e1;max-height:40px;overflow-y:auto;line-height:1.4;}
 
-/* Màu sắc quân cờ trực tiếp trên button */
-.sq.whitePiece { color:#fff; text-shadow:0 2px 2px #000, 0 0 2px #000; }
-.sq.blackPiece { color:#111; text-shadow:0 1px 0 #777, 0 0 2px #fff; }
-
-.move-badge { position:absolute; top:1px; right:1px; font-size:8px; font-weight:900; padding:1px 3px; border-radius:3px; z-index:15; color:#fff; pointer-events:none; }
-.badge-genius { background:#06b6d4; }
-.badge-great { background:#3b82f6; }
-.badge-good { background:#10b981; }
-.badge-inaccuracy { background:#ef4444; }
-.badge-blunder { background:#991b1b; }
-
-.history-wrap { width:320px; margin:8px auto; }
-#history-box { width:100%; height:45px; background:#1e293b; border:1px solid #475569; border-radius:6px; padding:4px; font-size:11px; color:#cbd5e1; overflow-y:auto; text-align:left; }
-.panel { margin-top:6px; font-size:11px; color:#94a3b8; }
+.stats{margin:10px auto 6px;max-width:420px;gap:6px;}
+.badge{
+  flex:1;min-width:110px;padding:7px 10px;border:1px solid var(--line);border-radius:11px;
+  background:var(--panel);box-shadow:0 7px 22px rgba(0,0,0,.15);font-size:12px
+}
+.badge strong{display:block;font-size:15px;margin-top:2px}
+#eloChange{display:block}
+.elo-up{color:#4ade80}.elo-down{color:#fb7185}.elo-draw{color:#facc15}
+.note{font-size:11px;color:var(--muted);margin:6px 10px;line-height:1.4}
+#promo{position:fixed;z-index:20;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)}
+.modal{background:#101c2e;border:1px solid #40506a;border-radius:18px;padding:18px;box-shadow:0 25px 70px rgba(0,0,0,.7)}
+.modal h2{margin:0 0 13px;font-size:19px}
+.promos{display:flex;gap:9px}.promos button{width:64px;height:64px;font-size:40px;border:1px solid var(--line);border-radius:12px;background:#26364d;cursor:pointer;color:#fff}
+.promos button:hover{background:#3b4d66}
+@media(max-width:430px){body{padding-top:8px}h1{font-size:21px}}
 </style>
 </head>
 <body>
-
-<h1>♟️ CỜ VUA — ĐẤU TRƯỜNG ELO</h1>
+<div class="app">
+<h1>♟️ CỜ VUA AI</h1>
 <div class="top">
-    <select id="elo">
-        <option value="300">300 Elo (Người mới)</option>
-        <option value="700" selected>700 Elo (Pro player)</option>
-        <option value="1300">1300 Elo (Kiện tướng 🤫)</option>
-        <option value="1700">1700 Elo (Đại kiện tướng 💀)</option>
-    </select>
-    <button onclick="undo()">↩ Đi lại</button>
-    <button onclick="resetGame()">🔄 Chơi lại</button>
+<select id="level"><option value="1">Dễ</option><option value="2" selected>Trung bình</option><option value="3">Khó</option><option value="4">Siêu khó 💀</option></select>
+<button id="undo">↩ Undo</button><button id="hintBtn">💡 Gợi ý (0)</button><button id="new">🔄 Ván mới</button>
+</div>
+<div id="status">Đang tải...</div>
+<div class="wrap"><div id="board" class="board"></div></div>
+
+<div class="history-container">
+  <div class="history-title">📜 Lịch sử nước đi:</div>
+  <div id="history-box">Chưa có nước đi nào...</div>
 </div>
 
-<div id="status">Lượt của bạn (Trắng)</div>
+<div class="stats">
+  <div class="badge">⚪ Bạn<strong id="playerElo">1000</strong></div>
+  <div class="badge">🤖 Máy<strong id="aiElo">1200</strong></div>
+  <div class="badge" id="eloBox">📈 Xếp hạng<strong id="eloChange">Chưa có</strong></div>
+</div>
+<div class="note">💡 Đã fix lỗi bấm di chuyển trên di động. Hỗ trợ đầy đủ chiếu hết, nhập thành, bắt tốt qua đường, phong cấp.</div>
 
-<div class="wrap" id="board"></div>
-
-<div class="history-wrap"><div id="history-box">Lịch sử nước đi...</div></div>
-<div class="panel">⚪ Bạn: Trắng | ⚫ Máy: Đen</div>
-
+<div id="promo"><div class="modal"><h2>Chọn quân phong cấp</h2><div id="promos" class="promos"></div></div></div>
 <script>
-var ICON = {P:'♙', N:'♘', B:'♗', R:'♖', Q:'♕', K:'♔', p:'♟', n:'♞', b:'♝', r:'♜', q:'♛', k:'♚'};
-var VALUE = {P:100, N:320, B:330, R:500, Q:900, K:20000};
-var KN = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
-var DIRB = [[1,1],[1,-1],[-1,1],[-1,-1]], DIRR = [[1,0],[-1,0],[0,1],[0,-1]];
+const ICON={P:'♙',N:'♘',B:'♗',R:'♖',Q:'♕',K:'♔',p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
+const VALUE={P:100,N:320,B:330,R:500,Q:900,K:20000};
+const KN=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+const DIRB=[[1,1],[1,-1],[-1,1],[-1,-1]],DIRR=[[1,0],[-1,0],[0,1],[0,-1]];
+let board,turn,selected=null,history=[],historyText=[],castle,ep,pendingPromotion=null,lastMove=null,gameOver=false,thinking=false;
 
-var board, turn, selected = null, history = [], castle = {K:true, Q:true, k:true, q:true}, ep = null, gameOver = false, historyText = [], lastMove = null, currentEvalBadge = null;
+if(!localStorage.getItem('chessPlayerElo')){localStorage.setItem('chessPlayerElo','1000');}
+let playerElo=Number(localStorage.getItem('chessPlayerElo')||1000);
+let gameResultRecorded=false;
+let hintsAvailable=0;
+let undoUses=0;
+let undoLimit=0;
 
-function createBoardDOM() {
-    var boardDiv = document.getElementById('board');
-    boardDiv.innerHTML = '';
-    for(var r=0; r<8; r++) {
-        for(var c=0; c<8; c++) {
-            var btn = document.createElement('button');
-            btn.id = 'sq_' + r + '_' + c;
-            
-            // Lắng nghe sự kiện click trực tiếp cực nhạy trên mọi thiết bị
-            (function(row, colIdx) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    clickSq(row, colIdx);
-                });
-                btn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    clickSq(row, colIdx);
-                }, {passive: false});
-            })(r, c);
-
-            boardDiv.appendChild(btn);
-        }
-    }
+function aiRating(){
+  const lv=+document.getElementById('level').value;
+  return [900,1200,1500,1800][lv-1]||1200;
 }
 
-function initBoard() {
-    return [
-        ['r','n','b','q','k','b','n','r'],
-        ['p','p','p','p','p','p','p','p'],
-        [null,null,null,null,null,null,null,null],
-        [null,null,null,null,null,null,null,null],
-        [null,null,null,null,null,null,null,null],
-        [null,null,null,null,null,null,null,null],
-        ['P','P','P','P','P','P','P','P'],
-        ['R','N','B','Q','K','B','N','R']
-    ];
+function updateHintUI(){
+  const b=document.getElementById('hintBtn');
+  if(b) b.textContent='💡 Gợi ý ('+hintsAvailable+')';
 }
 
-function resetGame() {
-    board = initBoard();
-    turn = 'w';
-    selected = null;
-    history = [];
-    castle = {K:true, Q:true, k:true, q:true};
-    ep = null;
-    gameOver = false;
-    historyText = [];
-    lastMove = null;
-    currentEvalBadge = null;
-    createBoardDOM();
-    render();
+function giveHint(){
+  if(gameOver||thinking||turn!=='w'||hintsAvailable<=0)return;
+  const moves=allMoves(board,'w',castle,ep);
+  if(!moves.length)return;
+  let best=moves[0], bestScore=-Infinity;
+  for(const m of moves){
+    const p=board[m[0]][m[1]], captured=board[m[2]][m[3]];
+    let score=(captured?VALUE[captured.toUpperCase()]:0)+(p?.toUpperCase()==='P'?2:0);
+    if(score>bestScore){bestScore=score;best=m}
+  }
+  selected=[best[0],best[1]];
+  render();
+  setTimeout(()=>{ if(selected && selected[0]===best[0] && selected[1]===best[1]){ selected=null;render();}},900);
+  hintsAvailable--;
+  updateHintUI();
 }
 
-function col(p) { return p ? (p === p.toUpperCase() ? 'w' : 'b') : null; }
-function inside(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
-
-function cloneBoard(b) {
-    var nb = [];
-    for(var r=0; r<8; r++) {
-        var row = [];
-        for(var c=0; c<8; c++) row.push(b[r][c]);
-        nb.push(row);
-    }
-    return nb;
+function updateEloUI(changeText='', cls=''){
+  document.getElementById('playerElo'].textContent='ELO '+playerElo;
+  document.getElementById('aiElo'].textContent='ELO '+aiRating();
+  const e=document.getElementById('eloChange');
+  e.textContent=changeText||'Chưa có ván';
+  e.className=cls;
 }
 
-function kingPos(b, c) {
-    var target = c === 'w' ? 'K' : 'k';
-    for(var r=0; r<8; r++) {
-        for(var cc=0; cc<8; cc++) {
-            if(b[r][cc] === target) return [r, cc];
-        }
-    }
-    return null;
+function recordElo(result){
+  if(gameResultRecorded)return;
+  gameResultRecorded=true;
+  const r=aiRating(), expected=1/(1+Math.pow(10,(r-playerElo)/400));
+  const actual=result==='win'?1:result==='draw'?.5:0;
+  const k=32;
+  const change=Math.round(k*(actual-expected));
+  playerElo=Math.max(200,playerElo+change);
+  localStorage.setItem('chessPlayerElo',playerElo);
+  if(result==='win'){hintsAvailable++;undoLimit=2;undoUses=0;updateHintUI();}
+  updateEloUI((change>=0?'+':'')+change+' ELO',change>0?'elo-up':change<0?'elo-down':'elo-draw');
 }
 
-function attacked(b, r, c, by) {
-    for(var rr=0; rr<8; rr++) {
-        for(var cc=0; cc<8; cc++) {
-            var p = b[rr][cc];
-            if(!p || col(p) !== by) continue;
-            var t = p.toUpperCase(), dr = r - rr, dc = c - cc;
-            if(t === 'P') { var d = by === 'w' ? -1 : 1; if(dr === d && Math.abs(dc) === 1) return true; }
-            if(t === 'N') {
-                for(var i=0; i<KN.length; i++) if(KN[i][0] === dr && KN[i][1] === dc) return true;
-            }
-            if(t === 'K' && Math.max(Math.abs(dr), Math.abs(dc)) === 1) return true;
-            var dirs = t === 'B' ? DIRB : t === 'R' ? DIRR : t === 'Q' ? DIRB.concat(DIRR) : null;
-            if(dirs) {
-                for(var i=0; i<dirs.length; i++) {
-                    var sr = dirs[i][0], sc = dirs[i][1];
-                    var a = rr + sr, d = cc + sc;
-                    while(inside(a, d)) {
-                        if(a === r && d === c) return true;
-                        if(b[a][d]) break;
-                        a += sr; d += sc;
-                    }
-                }
-            }
-        }
-    }
-    return false;
+function initial(){return [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],...Array(4).fill(null).map(()=>Array(8).fill(null)),['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']]}
+
+function reset(){
+  board=initial();turn='w';selected=null;history=[];historyText=[];castle={K:true,Q:true,k:true,q:true};ep=null;pendingPromotion=null;lastMove=null;gameOver=false;thinking=false;gameResultRecorded=false;undoUses=0;undoLimit=0;closePromo();updateEloUI();updateHintUI();render()
 }
 
-function check(b, c) {
-    var k = kingPos(b, c);
-    return !k || attacked(b, k[0], k[1], c === 'w' ? 'b' : 'w');
+function col(p){return p?(p===p.toUpperCase()?'w':'b'):null} 
+function opp(c){return c==='w'?'b':'w'} 
+function inside(r,c){return r>=0&&r<8&&c>=0&&c<8}
+function cloneBoard(b){return b.map(row=>row.slice())}
+function state(){return {board:cloneBoard(board),turn,castle:{...castle},ep:ep?[...ep]:null,lastMove:lastMove?[...lastMove]:null,historyText:[...historyText]}}
+function restore(s){board=cloneBoard(s.board);turn=s.turn;castle={...s.castle};ep=s.ep?[...s.ep]:null;lastMove=s.lastMove?[...s.lastMove]:null;historyText=[...s.historyText];selected=null;gameOver=false}
+
+function kingPos(b,c){for(let r=0;r<8;r++)for(let x=0;x<8;x++)if(b[r][x]===(c==='w'?'K':'k'))return [r,x];return null}
+
+function attacked(b,r,c,by){
+ for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++){let p=b[rr][cc];if(!p||col(p)!==by)continue;let t=p.toUpperCase(),dr=r-rr,dc=c-cc;
+  if(t==='P'){let d=by==='w'?-1:1;if(dr===d&&Math.abs(dc)===1)return true}
+  if(t==='N'&&KN.some(v=>v[0]===dr&&v[1]===dc))return true;
+  if(t==='K'&&Math.max(Math.abs(dr),Math.abs(dc))===1)return true;
+  let dirs=t==='B'?DIRB:t==='R'?DIRR:t==='Q'?[...DIRB,...DIRR]:null;
+  if(dirs){for(let [sr,sc] of dirs){let a=rr+sr,d=cc+sc;while(inside(a,d)){if(a===r&&d===c)return true;if(b[a][d])break;a+=sr;d+=sc}}}
+ }
+ return false
 }
 
-function pseudoMoves(b, r, c) {
-    var p = b[r][c], co = col(p), out = [];
-    if(!p) return out;
-    var t = p.toUpperCase();
-    
-    if(t === 'P') {
-        var d = (co === 'w') ? -1 : 1;
-        var start = (co === 'w') ? 6 : 1;
-        if(inside(r + d, c) && !b[r + d][c]) {
-            out.push([r + d, c]);
-            if(r === start && !b[r + 2 * d][c]) out.push([r + 2 * d, c]);
-        }
-        var dcs = [-1, 1];
-        for(var i=0; i<dcs.length; i++) {
-            var dc = dcs[i];
-            var rr = r + d, cc = c + dc;
-            if(inside(rr, cc) && b[rr][cc] && col(b[rr][cc]) !== co) out.push([rr, cc]);
-            if(ep && ep[0] === rr && ep[1] === cc) out.push([rr, cc]);
-        }
-    } else if(t === 'N') {
-        for(var i=0; i<KN.length; i++) {
-            var rr = r + KN[i][0], cc = c + KN[i][1];
-            if(inside(rr, cc) && col(b[rr][cc]) !== co) out.push([rr, cc]);
-        }
-    } else if(t === 'B' || t === 'R' || t === 'Q') {
-        var dirs = t === 'B' ? DIRB : t === 'R' ? DIRR : DIRB.concat(DIRR);
-        for(var i=0; i<dirs.length; i++) {
-            var dr = dirs[i][0], dc = dirs[i][1];
-            var rr = r + dr, cc = c + dc;
-            while(inside(rr, cc)) {
-                if(!b[rr][cc]) {
-                    out.push([rr, cc]);
-                } else {
-                    if(col(b[rr][cc]) !== co) out.push([rr, cc]);
-                    break;
-                }
-                rr += dr; cc += dc;
-            }
-        }
-    } else if(t === 'K') {
-        for(var dr=-1; dr<=1; dr++) {
-            for(var dc=-1; dc<=1; dc++) {
-                if(!dr && !dc) continue;
-                var rr = r + dr, cc = c + dc;
-                if(inside(rr, cc) && col(b[rr][cc]) !== co) out.push([rr, cc]);
-            }
-        }
-    }
-    return out;
+function check(b,c){let k=kingPos(b,c);return !k||attacked(b,k[0],k[1],opp(c))}
+
+function pseudo(b,r,c,currTurn){
+ const p=b[r][c];if(!p||col(p)!==currTurn)return[];const co=currTurn,t=p.toUpperCase(),out=[];
+ if(t==='P'){let d=co==='w'?-1:1,start=co==='w'?6:1;if(inside(r+d,c)&&!b[r+d][c]){out.push([r+d,c]);if(r===start&&!b[r+2*d][c])out.push([r+2*d,c])}for(let dc of [-1,1]){let rr=r+d,cc=c+dc;if(inside(rr,cc)&&b[rr][cc]&&col(b[rr][cc])!==co&&b[rr][cc].toUpperCase()!=='K')out.push([rr,cc]);if(ep&&ep[0]===rr&&ep[1]===cc)out.push([rr,cc])}}
+ if(t==='N')for(let [dr,dc] of KN){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&col(b[rr][cc])!==co&&b[rr][cc]?.toUpperCase()!=='K')out.push([rr,cc])}
+ if(['B','R','Q'].includes(t)){let dirs=t==='B'?DIRB:t==='R'?DIRR:[...DIRB,...DIRR];for(let [dr,dc] of dirs){let rr=r+dr,cc=c+dc;while(inside(rr,cc)){if(!b[rr][cc])out.push([rr,cc]);else{if(col(b[rr][cc])!==co&&b[rr][cc].toUpperCase()!=='K')out.push([rr,cc]);break}rr+=dr;cc+=dc}}}
+ if(t==='K'){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&col(b[rr][cc])!==co&&b[rr][cc]?.toUpperCase()!=='K')out.push([rr,cc])}
+  let row=co==='w'?7:0,king=co==='w'?'K':'k',enemy=opp(co);if(r===row&&c===4&&!check(b,co)){
+   if(castle[king]&&!b[row][5]&&!b[row][6]&&b[row][7]===(co==='w'?'R':'r')&&!attacked(b,row,5,enemy)&&!attacked(b,row,6,enemy))out.push([row,6]);
+   let queen=co==='w'?'Q':'q';if(castle[queen]&&!b[row][1]&&!b[row][2]&&!b[row][3]&&b[row][0]===(co==='w'?'R':'r')&&!attacked(b,row,3,enemy)&&!attacked(b,row,2,enemy))out.push([row,2]);
+  }
+ }
+ return out;
 }
 
-function _applyMove(b, r, c, rr, cc, co, cast, eps) {
-    var nb = cloneBoard(b), p = nb[r][c], t = p.toUpperCase(), dest = nb[rr][cc];
-    nb[r][c] = null;
-    nb[rr][cc] = p;
-    var nep = null, ncast = {K:cast.K, Q:cast.Q, k:cast.k, q:cast.q};
-    
-    if(t === 'P' && eps && rr === eps[0] && cc === eps[1] && !dest) nb[rr + (co === 'w' ? 1 : -1)][cc] = null;
-    if(t === 'P' && Math.abs(rr - r) === 2) nep = [(r + rr) / 2, c];
-    return {board: nb, castle: ncast, ep: nep};
+function applyMove(b,r,c,rr,cc,co,cast,epSquare,promo){
+ const nb=cloneBoard(b),p=nb[r][c],t=p.toUpperCase(),dest=nb[rr][cc];nb[r][c]=null;nb[rr][cc]=promo?(co==='w'?promo:promo.toLowerCase()):p;
+ let nep=null,ncast={...cast};
+ if(t==='P'&&epSquare&&rr===epSquare[0]&&cc===epSquare[1]&&!dest)nb[rr+(co==='w'?1:-1)][cc]=null;
+ if(t==='P'&&Math.abs(rr-r)===2)nep=[(r+rr)/2,c];
+ if(t==='K'){ncast[co==='w'?'K':'k']=false;ncast[co==='w'?'Q':'q']=false;if(Math.abs(cc-c)===2){let rc=cc>c?7:0,tc=cc>c?5:3;nb[rr][tc]=nb[rr][rc];nb[rr][rc]=null}}
+ if(t==='R'){if(r===7&&c===0)ncast.Q=false;if(r===7&&c===7)ncast.K=false;if(r===0&&c===0)ncast.q=false;if(r===0&&c===7)ncast.k=false}
+ if(dest?.toUpperCase()==='R'){if(rr===7&&cc===0)ncast.Q=false;if(rr===7&&cc===7)ncast.K=false;if(rr===0&&cc===0)ncast.q=false;if(rr===0&&cc===7)ncast.k=false}
+ return {board:nb,castle:ncast,ep:nep};
 }
 
-function legalMoves(b, r, c, co, cast, eps) {
-    var pms = pseudoMoves(b, r, c), out = [];
-    for(var i=0; i<pms.length; i++) {
-        var rr = pms[i][0], cc = pms[i][1];
-        var z = _applyMove(b, r, c, rr, cc, co, cast, eps);
-        if(!check(z.board, co)) out.push([rr, cc]);
-    }
-    return out;
+function legalMoves(b,r,c,co,cast=castle,epSquare=ep){let p=b[r][c];if(!p||col(p)!==co)return[];let out=[];for(let [rr,cc] of pseudo(b,r,c,co)){let z=applyMove(b,r,c,rr,cc,co,cast,epSquare,null);if(!check(z.board,co))out.push([rr,cc])}return out}
+function allMoves(b,co,cast,epSquare){let a=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(col(b[r][c])===co)for(let [rr,cc] of legalMoves(b,r,c,co,cast,epSquare))a.push([r,c,rr,cc]);return a}
+
+function render(){
+ const el=document.getElementById('board');el.innerHTML='';let hints=selected?legalMoves(board,selected[0],selected[1],turn,castle,ep):[];
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  let s=document.createElement('div');
+  s.className='sq '+((r+c)%2?'dark':'light');
+  if(selected&&selected[0]===r&&selected[1]===c)s.classList.add('selected');
+  if(lastMove&&((lastMove[0]===r&&lastMove[1]===c)||(lastMove[2]===r&&lastMove[3]===c)))s.classList.add('last');
+  let h=hints.find(x=>x[0]===r&&x[1]===c);
+  if(h)s.classList.add(board[r][c]?'capture':'hint');
+  
+  if(board[r][c]){
+   let sp=document.createElement('span');
+   sp.className='piece '+(col(board[r][c])==='w'?'whitePiece':'blackPiece');
+   sp.textContent=ICON[board[r][c]];
+   s.appendChild(sp);
+  }
+  
+  // Tối ưu sự kiện chạm/click cực nhạy trên di động
+  (function(row, colIdx){
+    s.addEventListener('click', (e)=>{ e.preventDefault(); click(row, colIdx); });
+    s.addEventListener('touchend', (e)=>{ e.preventDefault(); click(row, colIdx); }, {passive:false});
+  })(r, c);
+
+  el.appendChild(s);
+ }
+
+ let inC=check(board,turn),moves=allMoves(board,turn,castle,ep);gameOver=moves.length===0;let st=document.getElementById('status');
+ if(gameOver){
+    if(inC){let humanWon=turn==='b';recordElo(humanWon?'win':'loss');st.textContent=humanWon?'🏆 CHIẾU HẾT! Bạn thắng!':'💀 CHIẾU HẾT! Máy thắng.'}
+    else {recordElo('draw');st.textContent='🤝 HÒA — Không còn nước đi hợp lệ.'}
+  }else if(thinking)st.textContent='🤖 Máy đang tính...';else if(inC)st.textContent='⚠️ '+(turn==='w'?'Bạn':'Máy')+' đang bị chiếu!';else st.textContent=turn==='w'?'⚪ Lượt của bạn':'⚫ Lượt của máy';
+
+  document.getElementById('history-box').textContent=historyText.length?historyText.join(', '):'Chưa có nước đi nào...';
 }
 
-function getAllMoves(b, co, cast, eps) {
-    var list = [];
-    for(var r=0; r<8; r++) {
-        for(var c=0; c<8; c++) {
-            if(col(b[r][c]) === co) {
-                var mvs = legalMoves(b, r, c, co, cast, eps);
-                for(var i=0; i<mvs.length; i++) list.push([r, c, mvs[i][0], mvs[i][1]]);
-            }
-        }
-    }
-    return list;
+function click(r,c){if(gameOver||thinking||turn!=='w'||pendingPromotion)return;if(selected){let m=legalMoves(board,selected[0],selected[1],turn,castle,ep);if(m.some(x=>x[0]===r&&x[1]===c)){humanMove(selected[0],selected[1],r,c);return}}selected=col(board[r][c])==='w'?[r,c]:null;render()}
+
+function humanMove(r,c,rr,cc){
+ history.push(state());
+ let p=board[r][c],needs=p.toUpperCase()==='P'&&(rr===0||rr===7);
+ if(needs){pendingPromotion={r,c,rr,cc,co:'w'};openPromo('w');return}
+ commit(r,c,rr,cc,null);
 }
 
-function evaluateQuality(diff) {
-    if (diff > 200) return { text: 'Thiên tài', type: 'badge-genius' };
-    if (diff > 50)  return { text: 'Hay đấy', type: 'badge-great' };
-    if (diff > -50) return { text: 'Ổn', type: 'badge-good' };
-    if (diff > -200)return { text: 'Chưa hay', type: 'badge-inaccuracy' };
-    return { text: 'Sai lầm', type: 'badge-blunder' };
+function commit(r,c,rr,cc,promo){
+ let piece=board[r][c];
+ historyText.push(piece.toUpperCase()+(cc+1)+(8-rr));
+ let z=applyMove(board,r,c,rr,cc,turn,castle,ep,promo);
+ board=z.board;castle=z.castle;ep=z.ep;lastMove=[r,c,rr,cc];turn=opp(turn);selected=null;render();
+ if(!gameOver&&turn==='b')setTimeout(aiMove,120);
 }
 
-function render() {
-    var hints = selected ? legalMoves(board, selected[0], selected[1], turn, castle, ep) : [];
+function openPromo(co){let modal=document.getElementById('promo'),box=document.getElementById('promos');box.innerHTML='';for(let p of ['Q','R','B','N']){let btn=document.createElement('button');btn.textContent=co==='w'?ICON[p]:ICON[p.toLowerCase()];btn.onclick=()=>{closePromo();let x=pendingPromotion;pendingPromotion=null;commit(x.r,x.c,x.rr,x.cc,p)};box.appendChild(btn)}modal.style.display='flex';render()}
+function closePromo(){document.getElementById('promo').style.display='none'}
 
-    for(var r=0; r<8; r++) {
-        for(var c=0; c<8; c++) {
-            var sq = document.getElementById('sq_' + r + '_' + c);
-            if(!sq) continue;
-            var isDark = (r + c) % 2 === 1;
-            var cls = 'sq ' + (isDark ? 'dark' : 'light');
-            
-            if(selected && selected[0] === r && selected[1] === c) cls += ' selected';
-            if(lastMove && ((lastMove[0] === r && lastMove[1] === c) || (lastMove[2] === r && lastMove[3] === c))) cls += ' last';
-            
-            var isHint = false, isCap = false;
-            for(var i=0; i<hints.length; i++) {
-                if(hints[i][0] === r && hints[i][1] === c) {
-                    if(board[r][c]) isCap = true; else isHint = true;
-                }
-            }
-            if(isHint) cls += ' hint';
-            if(isCap) cls += ' capture';
-
-            var p = board[r][c];
-            if(p) {
-                cls += (col(p) === 'w' ? ' whitePiece' : ' blackPiece');
-            }
-
-            sq.className = cls;
-            
-            var htmlContent = p ? ICON[p] : '';
-            if(currentEvalBadge && currentEvalBadge.pos[0] === r && currentEvalBadge.pos[1] === c) {
-                htmlContent += '<div class="move-badge ' + currentEvalBadge.type + '">' + currentEvalBadge.text + '</div>';
-            }
-
-            sq.innerHTML = htmlContent;
-        }
-    }
-    
-    var inCheck = check(board, turn);
-    var allMvs = getAllMoves(board, turn, castle, ep);
-    gameOver = allMvs.length === 0;
-    
-    var st = document.getElementById('status');
-    if(gameOver) {
-        st.textContent = inCheck ? '♚ CHIẾU HẾT! ' + (turn === 'w' ? 'Máy thắng.' : 'Bạn thắng!') : '🤝 HÒA cờ!';
-    } else if(inCheck) {
-        st.textContent = '⚠️ ' + (turn === 'w' ? 'Bạn' : 'Máy') + ' đang bị chiếu!';
-    } else {
-        st.textContent = turn === 'w' ? 'Lượt của bạn (Trắng)' : 'Lượt của máy (Đen)...';
-    }
-
-    document.getElementById('history-box').textContent = historyText.length ? historyText.join(', ') : 'Lịch sử nước đi...';
+function undo(){
+  if(!history.length||thinking)return;
+  if(gameOver && undoUses>=undoLimit)return;
+  restore(history.pop());
+  if(gameOver===false && undoLimit>0) undoUses++;
+  gameResultRecorded=false;
+  updateEloUI();
+  render();
 }
 
-function clickSq(r, c) {
-    if(gameOver || turn !== 'w') return;
-    if(selected) {
-        var mvs = legalMoves(board, selected[0], selected[1], turn, castle, ep);
-        var valid = false;
-        for(var i=0; i<mvs.length; i++) {
-            if(mvs[i][0] === r && mvs[i][1] === c) valid = true;
-        }
-        if(valid) {
-            commitMove(selected[0], selected[1], r, c);
-            return;
-        }
-    }
-    if(col(board[r][c]) === 'w') {
-        selected = [r, c];
-        render();
-    } else {
-        selected = null;
-        render();
-    }
+const PST={P:[0,5,5,-10,-10,5,5,0,0,10,-5,0,0,-5,10,0,0,5,10,20,20,10,5,0,5,5,10,25,25,10,5,5,10,10,20,30,30,20,10,10,50,50,50,50,50,50,50,50,0,0,0,0,0,0,0,0],N:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,5,5,0,-20,-40,-30,5,10,15,15,10,5,-30,-30,0,15,20,20,15,0,-30,-30,5,15,20,20,15,5,-30,-30,0,10,15,15,10,0,-30,-40,-20,0,0,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],B:[-20,-10,-10,-10,-10,-10,-10,-20,-10,5,0,0,0,0,5,-10,-10,10,10,10,10,10,10,-10,-10,0,10,10,10,10,0,-10,-10,5,5,10,10,5,5,-10,-10,0,5,10,10,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-10,-10,-10,-10,-20],R:[0,0,0,5,5,0,0,0,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,5,10,10,10,10,10,10,5,10,10,10,10,10,10,10,10,0,0,0,0,0,0,0,0,0,0,0,5,5,0,0,0],Q:[-20,-10,-10,0,0,-10,-10,-20,-10,0,5,0,0,0,0,-10,-10,5,5,5,5,5,0,-10,0,0,5,5,5,5,0,-5,-5,0,5,5,5,5,0,-5,-10,0,5,5,5,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20]};
+
+function evaluate(b){
+ let score=0;
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;let t=p.toUpperCase(),v=VALUE[t];let bonus=PST[t]?.[(p===p.toUpperCase()?r:7-r)*8+c]||0;score+=(col(p)==='b'?1:-1)*(v+bonus)}
+ let bm=allMoves(b,'b',castle,ep).length,wm=allMoves(b,'w',castle,ep).length;
+ score+=(bm-wm)*3;
+ if(check(b,'w'))score+=45;
+ if(check(b,'b'))score-=45;
+ return score;
 }
 
-function commitMove(r, c, rr, cc) {
-    history.push({ board: cloneBoard(board), turn: turn, castle: {K:castle.K, Q:castle.Q, k:castle.k, q:castle.q}, ep: ep?[...ep]:null, lastMove: lastMove?[...lastMove]:null, historyText: historyText.slice() });
-    var piece = board[r][c];
-    
-    var beforeEval = evaluate(board);
-    var z = _applyMove(board, r, c, rr, cc, turn, castle, ep);
-    var afterEval = evaluate(z.board);
-    var diff = turn === 'w' ? (afterEval - beforeEval) : (beforeEval - afterEval);
-    
-    currentEvalBadge = { pos: [rr, cc], text: evaluateQuality(diff).text, type: evaluateQuality(diff).type };
-
-    board = z.board; castle = z.castle; ep = z.ep;
-    lastMove = [r, c, rr, cc];
-    
-    historyText.push(piece.toUpperCase() + (cc + 1) + (8 - rr));
-    selected = null;
-    turn = turn === 'w' ? 'b' : 'w';
-    render();
-    if(!gameOver && turn === 'b') setTimeout(aiMove, 150);
+function minimaxAI(b,co,depth,alpha,beta,cast,eps){
+ let moves=allMoves(b,co,cast,eps);
+ if(depth===0)return evaluate(b);
+ if(!moves.length)return check(b,co)?(co==='b'?-999999:999999):0;
+ moves.sort((a,z)=>{let az=b[z[2]][z[3]],bz=b[a[2]][a[3]];return (az?VALUE[az.toUpperCase()]:0)-(bz?VALUE[bz.toUpperCase()]:0)});
+ if(co==='b'){
+  let best=-Infinity;
+  for(let m of moves){let promo=(b[m[0]][m[1]].toUpperCase()==='P'&&(m[2]===0||m[2]===7))?'Q':null,z=applyMove(b,...m,co,cast,eps,promo),v=minimaxAI(z.board,'w',depth-1,alpha,beta,z.castle,z.ep);best=Math.max(best,v);alpha=Math.max(alpha,v);if(beta<=alpha)break}
+  return best;
+ }else{
+  let best=Infinity;
+  for(let m of moves){let promo=(b[m[0]][m[1]].toUpperCase()==='P'&&(m[2]===0||m[2]===7))?'Q':null,z=applyMove(b,...m,co,cast,eps,promo),v=minimaxAI(z.board,'b',depth-1,alpha,beta,z.castle,z.ep);best=Math.min(best,v);beta=Math.min(beta,v);if(beta<=alpha)break}
+  return best;
+ }
 }
 
-function evaluate(b) {
-    var score = 0;
-    for(var r=0; r<8; r++) {
-        for(var c=0; c<8; c++) {
-            var p = b[r][c];
-            if(p) score += (col(p) === 'b' ? 1 : -1) * VALUE[p.toUpperCase()];
-        }
-    }
-    return score;
+function aiMove(){
+ if(turn!=='b'||gameOver)return;
+ thinking=true;render();
+ setTimeout(()=>{
+  let level=+document.getElementById('level').value,depth=level===1?1:level===2?2:3,moves=allMoves(board,'b',castle,ep);
+  if(!moves.length){thinking=false;render();return}
+  let best=moves[0],bestV=-Infinity;
+  for(let m of moves){let promo=(board[m[0]][m[1]].toUpperCase()==='P'&&(m[2]===0||m[2]===7))?'Q':null,z=applyMove(board,...m,'b',castle,ep,promo),v=minimaxAI(z.board,'w',depth-1,-Infinity,Infinity,z.castle,z.ep);if(v>bestV){bestV=v;best=m}}
+  thinking=false;
+  let p=board[best[0]][best[1]],promotion=p.toUpperCase()==='P'&&(best[2]===0||best[2]===7)?'Q':null;
+  
+  let destPiece=board[best[2]][best[3]];
+  historyText.push(p.toUpperCase()+(best[3]+1)+(8-best[2]));
+  let z=applyMove(board,best[0],best[1],best[2],best[3],'b',castle,ep,promotion);
+  board=z.board;castle=z.castle;ep=z.ep;lastMove=[best[0],best[1],best[2],best[3]];turn='w';
+  render();
+ },20);
 }
 
-function minimax(b, depth, isMax, alpha, beta, cast, eps) {
-    var co = isMax ? 'b' : 'w';
-    var moves = getAllMoves(b, co, cast, eps);
-    if(depth === 0 || moves.length === 0) return evaluate(b);
+document.getElementById('new').onclick=reset;
+document.getElementById('hintBtn').onclick=giveHint;
+document.getElementById('undo').onclick=undo;
+document.getElementById('level').onchange=()=>{updateEloUI();render()};
 
-    if(isMax) {
-        var maxEval = -Infinity;
-        for(var i=0; i<moves.length; i++) {
-            var m = moves[i];
-            var z = _applyMove(b, m[0], m[1], m[2], m[3], 'b', cast, eps);
-            var ev = minimax(z.board, depth - 1, false, alpha, beta, z.castle, z.ep);
-            if(ev > maxEval) maxEval = ev;
-            if(maxEval > alpha) alpha = maxEval;
-            if(beta <= alpha) break;
-        }
-        return maxEval;
-    } else {
-        var minEval = Infinity;
-        for(var i=0; i<moves.length; i++) {
-            var m = moves[i];
-            var z = _applyMove(b, m[0], m[1], m[2], m[3], 'w', cast, eps);
-            var ev = minimax(z.board, depth - 1, true, alpha, beta, z.castle, z.ep);
-            if(ev < minEval) minEval = ev;
-            if(minEval < beta) beta = minEval;
-            if(beta <= alpha) break;
-        }
-        return minEval;
-    }
-}
-
-function aiMove() {
-    var moves = getAllMoves(board, 'b', castle, ep);
-    if(!moves.length) { gameOver = true; render(); return; }
-
-    var eloEl = document.getElementById('elo');
-    var elo = eloEl ? parseInt(eloEl.value) : 700;
-    var depth = elo <= 300 ? 1 : elo <= 700 ? 2 : elo <= 1300 ? 3 : 4;
-
-    var bestMove = moves[0], maxEval = -Infinity;
-    for(var i=0; i<moves.length; i++) {
-        var m = moves[i];
-        var z = _applyMove(board, m[0], m[1], m[2], m[3], 'b', castle, ep);
-        var ev = minimax(z.board, depth - 1, false, -Infinity, Infinity, z.castle, z.ep);
-        if(ev > maxEval) { maxEval = ev; bestMove = m; }
-    }
-
-    var p = board[bestMove[0]][bestMove[1]];
-    var beforeEval = evaluate(board);
-    var z = _applyMove(board, bestMove[0], bestMove[1], bestMove[2], bestMove[3], 'b', castle, ep);
-    var afterEval = evaluate(z.board);
-    var diff = afterEval - beforeEval;
-
-    currentEvalBadge = { pos: [bestMove[2], bestMove[3]], text: evaluateQuality(diff).text, type: evaluateQuality(diff).type };
-
-    board = z.board; castle = z.castle; ep = z.ep;
-    lastMove = [bestMove[0], bestMove[1], bestMove[2], bestMove[3]];
-    historyText.push(p.toUpperCase() + (bestMove[3] + 1) + (8 - bestMove[2]));
-    
-    turn = 'w';
-    render();
-}
-
-function undo() {
-    if(!history.length) return;
-    var last = history.pop();
-    board = last.board; turn = last.turn; castle = last.castle; ep = last.ep; lastMove = last.lastMove; historyText = last.historyText;
-    selected = null; currentEvalBadge = null;
-    render();
-}
-
-resetGame();
+updateEloUI();
+reset();
 </script>
-</body>
-</html>
-
+</div>
+</body></html>
