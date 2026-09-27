@@ -11,17 +11,21 @@ h1 { font-size:18px; margin:8px 0; }
 .top select, .top button { padding:6px 10px; background:#334155; color:#fff; border:0; border-radius:6px; font-weight:bold; font-size:12px; margin:2px; cursor:pointer; }
 #status { font-weight:bold; margin:6px 0; font-size:13px; color:#e2e8f0; min-height:20px; }
 .wrap { width:320px; height:320px; margin:0 auto; background:#111827; border:4px solid #111827; border-radius:6px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.6); display:flex; flex-wrap:wrap; }
-.sq { width:40px; height:40px; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:30px; outline:none; -webkit-tap-highlight-color: transparent; }
+.sq { width:40px; height:40px; border:0; margin:0; padding:0; position:relative; cursor:pointer; text-align:center; line-height:40px; font-size:28px; outline:none; -webkit-tap-highlight-color: transparent; }
 .light { background:#f0d9b5; }
 .dark { background:#b58863; }
 .sq.selected { background:#facc15 !important; }
 .sq.last { box-shadow:inset 0 0 0 3px #3b82f6; }
-.sq.hint:after { content:""; position:absolute; top:13px; left:13px; width:14px; height:14px; border-radius:50%; background:#22c55e; z-index:5; pointer-events:none; }
-.sq.capture:after { content:""; position:absolute; inset:4px; border:4px solid #ef4444; border-radius:50%; z-index:5; pointer-events:none; }
-.whitePiece { color:#fff; text-shadow:0 2px 2px #000, 0 0 2px #000; position:relative; z-index:2; pointer-events:none; }
-.blackPiece { color:#111; text-shadow:0 1px 0 #777, 0 0 2px #fff; position:relative; z-index:2; pointer-events:none; }
 
-.move-badge { position:absolute; top:1px; right:1px; font-size:8px; font-weight:900; padding:1px 3px; border-radius:3px; z-index:10; color:#fff; pointer-events:none; }
+/* Dấu chấm tròn và viền ăn quân hiển thị đè lên trên */
+.sq.hint:after { content:""; position:absolute; top:13px; left:13px; width:14px; height:14px; border-radius:50%; background:#22c55e; z-index:10; pointer-events:none; }
+.sq.capture:after { content:""; position:absolute; inset:4px; border:4px solid #ef4444; border-radius:50%; z-index:10; pointer-events:none; }
+
+/* Màu sắc quân cờ trực tiếp trên button */
+.sq.whitePiece { color:#fff; text-shadow:0 2px 2px #000, 0 0 2px #000; }
+.sq.blackPiece { color:#111; text-shadow:0 1px 0 #777, 0 0 2px #fff; }
+
+.move-badge { position:absolute; top:1px; right:1px; font-size:8px; font-weight:900; padding:1px 3px; border-radius:3px; z-index:15; color:#fff; pointer-events:none; }
 .badge-genius { background:#06b6d4; }
 .badge-great { background:#3b82f6; }
 .badge-good { background:#10b981; }
@@ -62,7 +66,6 @@ var DIRB = [[1,1],[1,-1],[-1,1],[-1,-1]], DIRR = [[1,0],[-1,0],[0,1],[0,-1]];
 
 var board, turn, selected = null, history = [], castle = {K:true, Q:true, k:true, q:true}, ep = null, gameOver = false, historyText = [], lastMove = null, currentEvalBadge = null;
 
-// Khởi tạo giao diện bàn cờ bằng DOM thực thụ
 function createBoardDOM() {
     var boardDiv = document.getElementById('board');
     boardDiv.innerHTML = '';
@@ -70,16 +73,14 @@ function createBoardDOM() {
         for(var c=0; c<8; c++) {
             var btn = document.createElement('button');
             btn.id = 'sq_' + r + '_' + c;
-            var isDark = (r + c) % 2 === 1;
-            btn.className = 'sq ' + (isDark ? 'dark' : 'light');
             
-            // Dùng closure để bắt sự kiện chuẩn xác
+            // Lắng nghe sự kiện click trực tiếp cực nhạy trên mọi thiết bị
             (function(row, colIdx) {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     clickSq(row, colIdx);
                 });
-                btn.addEventListener('touchstart', function(e) {
+                btn.addEventListener('touchend', function(e) {
                     e.preventDefault();
                     clickSq(row, colIdx);
                 }, {passive: false});
@@ -289,14 +290,14 @@ function render() {
             if(isHint) cls += ' hint';
             if(isCap) cls += ' capture';
 
-            sq.className = cls;
-            
-            var htmlContent = '';
-            if(board[r][c]) {
-                var pCol = col(board[r][c]) === 'w' ? 'whitePiece' : 'blackPiece';
-                htmlContent += '<span class="' + pCol + '">' + ICON[board[r][c]] + '</span>';
+            var p = board[r][c];
+            if(p) {
+                cls += (col(p) === 'w' ? ' whitePiece' : ' blackPiece');
             }
 
+            sq.className = cls;
+            
+            var htmlContent = p ? ICON[p] : '';
             if(currentEvalBadge && currentEvalBadge.pos[0] === r && currentEvalBadge.pos[1] === c) {
                 htmlContent += '<div class="move-badge ' + currentEvalBadge.type + '">' + currentEvalBadge.text + '</div>';
             }
@@ -449,3 +450,4 @@ resetGame();
 </script>
 </body>
 </html>
+
