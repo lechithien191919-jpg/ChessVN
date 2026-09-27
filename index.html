@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Cờ vua — AI Fixed & Enhanced</title>
+<title>Cờ vua AI — Full Features</title>
 <style>
 :root{
   --bg:#07111f;--panel:rgba(15,27,45,.78);--panel2:rgba(30,41,59,.88);
@@ -12,79 +12,73 @@
 }
 *{box-sizing:border-box}
 body{
-  margin:0;min-height:100vh;padding:18px 10px 28px;color:var(--text);
-  font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:center;
+  margin:0;min-height:100vh;padding:15px 10px 25px;color:var(--text);
+  font-family:Inter,system-ui,-apple-system,sans-serif;text-align:center;
   background:
     radial-gradient(circle at 15% 0%,rgba(59,130,246,.20),transparent 32%),
     radial-gradient(circle at 85% 10%,rgba(168,85,247,.16),transparent 30%),
     linear-gradient(145deg,#050b14,#0d1b2d 55%,#08111e);
 }
-h1{font-size:27px;letter-spacing:.5px;margin:4px 0 12px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
+h1{font-size:25px;margin:5px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
 .app{width:min(720px,100%);margin:auto}
-.top,.panel,.stats{
-  display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap
-}
-.top{margin:0 auto 10px}
+.top,.stats{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .top button,.top select{
-  border:1px solid var(--line);border-radius:12px;padding:9px 13px;
-  background:var(--panel2);color:#fff;font-weight:750;cursor:pointer;
-  box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(10px)
+  border:1px solid var(--line);border-radius:10px;padding:8px 12px;
+  background:var(--panel2);color:#fff;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 15px rgba(0,0,0,.15)
 }
 .top button:hover,.top select:hover{background:#3a4a61}
-.top button:active{transform:translateY(1px) scale(.98)}
 #status{
-  min-height:28px;margin:7px auto 10px;padding:7px 12px;width:fit-content;max-width:95%;
+  min-height:26px;margin:5px auto 10px;padding:6px 12px;width:fit-content;max-width:95%;
   border:1px solid var(--line);border-radius:999px;background:rgba(15,23,42,.65);
-  color:#e6edf7;font-size:14px;font-weight:750
+  color:#e6edf7;font-size:13px;font-weight:700
 }
-.wrap{width:min(560px,100%);margin:0 auto;padding:0 7px}
+.wrap{width:min(520px,100%);margin:0 auto;padding:0 5px}
 .board{
   width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);
-  grid-template-rows:repeat(8,1fr);border:7px solid #172235;border-radius:16px;
-  overflow:hidden;box-shadow:0 20px 55px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.08);
-  background:#172235
+  grid-template-rows:repeat(8,1fr);border:6px solid #172235;border-radius:14px;
+  overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.45);background:#172235
 }
-.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%;transition:filter .12s}
-.sq:hover{filter:brightness(1.06)}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%}
 .light{background:var(--light)} .dark{background:var(--dark)}
-.sq.selected{box-shadow:inset 0 0 0 4px var(--gold),inset 0 0 24px rgba(247,201,72,.25);z-index:2}
-.sq.hint:after{content:"";position:absolute;width:17px;height:17px;border-radius:50%;background:var(--green);opacity:.85;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.sq.capture:after{content:"";position:absolute;inset:6px;border:4px solid var(--red);border-radius:50%;box-shadow:0 0 10px rgba(255,93,108,.25)}
-.sq.last{box-shadow:inset 0 0 0 4px rgba(80,170,255,.65),inset 0 0 18px rgba(80,170,255,.16)}
-.piece{font-size:clamp(31px,8vw,54px);font-family:"Arial Unicode MS","Segoe UI Symbol",serif;user-select:none;line-height:1;z-index:1}
-.whitePiece{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35),0 0 1px rgba(0,0,0,.2)}
-.blackPiece{color:#050505;text-shadow:0 1px 0 #777,0 0 2px #fff}
+.sq.selected{box-shadow:inset 0 0 0 4px var(--gold),inset 0 0 20px rgba(247,201,72,.25);z-index:2}
+.sq.hint:after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:var(--green);opacity:.85}
+.sq.capture:after{content:"";position:absolute;inset:5px;border:3px solid var(--red);border-radius:50%}
+.sq.last{box-shadow:inset 0 0 0 3px rgba(80,170,255,.65)}
+.piece{font-size:clamp(28px,7.5vw,50px);line-height:1;z-index:1}
+.whitePiece{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.blackPiece{color:#111;text-shadow:0 1px 2px rgba(255,255,255,.6)}
 
-/* Khung lịch sử nước đi */
-.history-container{width:min(560px,100%);margin:10px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;text-align:left;}
-.history-title{font-size:12px;color:var(--muted);font-weight:bold;margin-bottom:3px;}
-#history-box{font-size:13px;color:#cbd5e1;max-height:50px;overflow-y:auto;line-height:1.4;}
+.history-container{width:min(520px,100%);margin:10px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-align:left}
+.history-title{font-size:12px;color:var(--muted);font-weight:bold;margin-bottom:3px}
+#history-box{font-size:13px;color:#cbd5e1;max-height:45px;overflow-y:auto;line-height:1.4}
 
-.stats{margin:12px auto 7px;max-width:560px}
-.badge{
-  min-width:135px;padding:9px 12px;border:1px solid var(--line);border-radius:13px;
-  background:var(--panel);box-shadow:0 7px 22px rgba(0,0,0,.15);font-size:13px
-}
-.badge strong{display:block;font-size:17px;margin-top:2px}
-#eloChange{display:none}
+.stats{margin:10px auto 5px;max-width:520px}
+.badge{min-width:130px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:12px}
+.badge strong{display:block;font-size:15px;margin-top:2px}
 .elo-up{color:#4ade80}.elo-down{color:#fb7185}.elo-draw{color:#facc15}
-.note{font-size:12px;color:var(--muted);margin:9px 14px;line-height:1.45}
-#promo{position:fixed;z-index:20;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)}
-.modal{background:#101c2e;border:1px solid #40506a;border-radius:18px;padding:18px;box-shadow:0 25px 70px rgba(0,0,0,.7)}
-.modal h2{margin:0 0 13px;font-size:19px}
-.promos{display:flex;gap:9px}.promos button{width:64px;height:64px;font-size:40px;border:1px solid var(--line);border-radius:12px;background:#26364d;cursor:pointer;color:#fff}
-.promos button:hover{background:#3b4d66}
-@media(max-width:430px){body{padding-top:10px}h1{font-size:23px}.board{border-width:5px;border-radius:12px}.badge{min-width:120px}}
+
+#promo{position:fixed;z-index:20;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:20px}
+.modal{background:#101c2e;border:1px solid #40506a;border-radius:15px;padding:16px}
+.modal h2{margin:0 0 10px;font-size:18px}
+.promos{display:flex;gap:8px}.promos button{width:55px;height:55px;font-size:35px;border:1px solid var(--line);border-radius:10px;background:#26364d;cursor:pointer;color:#fff}
 </style>
 </head>
 <body>
 <div class="app">
 <h1>♟️ CỜ VUA AI</h1>
 <div class="top">
-<select id="level"><option value="1">Dễ</option><option value="2" selected>Trung bình</option><option value="3">Khó</option><option value="4">Siêu khó 💀</option></select>
-<button id="undo">↩ Undo</button><button id="hintBtn">💡 Gợi ý (0)</button><button id="new">🔄 Ván mới</button>
+<select id="level">
+  <option value="1">Dễ</option>
+  <option value="2" selected>Trung bình</option>
+  <option value="3">Khó</option>
+  <option value="4">Siêu khó 💀</option>
+</select>
+<button id="undo">↩ Undo</button>
+<button id="hintBtn">💡 Gợi ý (1)</button>
+<button id="new">🔄 Ván mới</button>
 </div>
-<div id="status">Đang tải...</div>
+<div id="status">Đang khởi tạo bàn cờ...</div>
 <div class="wrap"><div id="board" class="board"></div></div>
 
 <div class="history-container">
@@ -97,9 +91,10 @@ h1{font-size:27px;letter-spacing:.5px;margin:4px 0 12px;text-shadow:0 4px 20px r
   <div class="badge">🤖 Máy: Đen<strong id="aiElo">ELO 1200</strong></div>
   <div class="badge" id="eloBox">📈 Xếp hạng<strong id="eloChange">Chưa có ván</strong></div>
 </div>
-<div class="note">💡 Giữ nguyên thao tác mượt mà, bổ sung thêm lịch sử nước đi và tính năng gợi ý thông minh.</div>
+</div>
 
 <div id="promo"><div class="modal"><h2>Chọn quân phong cấp</h2><div id="promos" class="promos"></div></div></div>
+
 <script>
 const ICON={P:'♙',N:'♘',B:'♗',R:'♖',Q:'♕',K:'♔',p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
 const VALUE={P:100,N:320,B:330,R:500,Q:900,K:20000};
@@ -107,12 +102,9 @@ const KN=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
 const DIRB=[[1,1],[1,-1],[-1,1],[-1,-1]],DIRR=[[1,0],[-1,0],[0,1],[0,-1]];
 let board,turn,selected=null,history=[],historyText=[],castle,ep,pendingPromotion=null,lastMove=null,gameOver=false,thinking=false;
 
-if(!localStorage.getItem('chessEloV2')){localStorage.setItem('chessPlayerElo','1000');localStorage.setItem('chessEloV2','1')}
 let playerElo=Number(localStorage.getItem('chessPlayerElo')||1000);
 let gameResultRecorded=false;
-let hintsAvailable=0;
-let undoUses=0;
-let undoLimit=0;
+let hintsAvailable=1, undoUses=0, undoLimit=2;
 
 function aiRating(){
   const lv=+document.getElementById('level').value;
@@ -154,8 +146,7 @@ function recordElo(result){
   gameResultRecorded=true;
   const r=aiRating(), expected=1/(1+Math.pow(10,(r-playerElo)/400));
   const actual=result==='win'?1:result==='draw'?.5:0;
-  const k=32;
-  const change=Math.round(k*(actual-expected));
+  const change=Math.round(32*(actual-expected));
   playerElo=Math.max(200,playerElo+change);
   localStorage.setItem('chessPlayerElo',playerElo);
   if(result==='win'){hintsAvailable++;undoLimit=2;undoUses=0;updateHintUI();}
@@ -165,7 +156,7 @@ function recordElo(result){
 function initial(){return [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],...Array(4).fill(null).map(()=>Array(8).fill(null)),['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']]}
 
 function reset(){
-  board=initial();turn='w';selected=null;history=[];historyText=[];castle={K:true,Q:true,k:true,q:true};ep=null;pendingPromotion=null;lastMove=null;gameOver=false;thinking=false;gameResultRecorded=false;undoUses=0;undoLimit=0;closePromo();updateEloUI();updateHintUI();render();
+  board=initial();turn='w';selected=null;history=[];historyText=[];castle={K:true,Q:true,k:true,q:true};ep=null;pendingPromotion=null;lastMove=null;gameOver=false;thinking=false;gameResultRecorded=false;undoUses=0;hintsAvailable=1;closePromo();updateEloUI();updateHintUI();render();
 }
 
 function col(p){return p?(p===p.toUpperCase()?'w':'b'):null} 
@@ -179,7 +170,7 @@ function kingPos(b,c){for(let r=0;r<8;r++)for(let x=0;x<8;x++)if(b[r][x]===(c===
 
 function attacked(b,r,c,by){
  for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++){let p=b[rr][cc];if(!p||col(p)!==by)continue;let t=p.toUpperCase(),dr=r-rr,dc=c-cc;
-  if(t==='P'){let d=by==='w'?-1:1;if(dr===d&&Math.abs(dc)===1)return true}
+  if(t==='P'&&dr===(by==='w'?-1:1)&&Math.abs(dc)===1)return true;
   if(t==='N'&&KN.some(v=>v[0]===dr&&v[1]===dc))return true;
   if(t==='K'&&Math.max(Math.abs(dr),Math.abs(dc))===1)return true;
   let dirs=t==='B'?DIRB:t==='R'?DIRR:t==='Q'?[...DIRB,...DIRR]:null;
@@ -210,8 +201,6 @@ function applyMove(b,r,c,rr,cc,co,cast,epSquare,promo){
  if(t==='P'&&epSquare&&rr===epSquare[0]&&cc===epSquare[1]&&!dest)nb[rr+(co==='w'?1:-1)][cc]=null;
  if(t==='P'&&Math.abs(rr-r)===2)nep=[(r+rr)/2,c];
  if(t==='K'){ncast[co==='w'?'K':'k']=false;ncast[co==='w'?'Q':'q']=false;if(Math.abs(cc-c)===2){let rc=cc>c?7:0,tc=cc>c?5:3;nb[rr][tc]=nb[rr][rc];nb[rr][rc]=null}}
- if(t==='R'){if(r===7&&c===0)ncast.Q=false;if(r===7&&c===7)ncast.K=false;if(r===0&&c===0)ncast.q=false;if(r===0&&c===7)ncast.k=false}
- if(dest?.toUpperCase()==='R'){if(rr===7&&cc===0)ncast.Q=false;if(rr===7&&cc===7)ncast.K=false;if(rr===0&&cc===0)ncast.q=false;if(rr===0&&cc===7)ncast.k=false}
  return {board:nb,castle:ncast,ep:nep};
 }
 
@@ -234,7 +223,6 @@ function render(){
    sp.textContent=ICON[board[r][c]];
    s.appendChild(sp);
   }
-  
   s.onclick = () => click(r, c);
   el.appendChild(s);
  }
@@ -252,10 +240,7 @@ function click(r,c){
   if(gameOver||thinking||turn!=='w'||pendingPromotion)return;
   if(selected){
     let m=legalMoves(board,selected[0],selected[1],turn,castle,ep);
-    if(m.some(x=>x[0]===r&&x[1]===c)){
-      humanMove(selected[0],selected[1],r,c);
-      return;
-    }
+    if(m.some(x=>x[0]===r&&x[1]===c)){humanMove(selected[0],selected[1],r,c);return;}
   }
   selected=col(board[r][c])==='w'?[r,c]:null;
   render();
@@ -273,7 +258,7 @@ function commit(r,c,rr,cc,promo){
  historyText.push(piece.toUpperCase()+(cc+1)+(8-rr));
  let z=applyMove(board,r,c,rr,cc,turn,castle,ep,promo);
  board=z.board;castle=z.castle;ep=z.ep;lastMove=[r,c,rr,cc];turn=opp(turn);selected=null;render();
- if(!gameOver&&turn==='b')setTimeout(aiMove,120);
+ if(!gameOver&&turn==='b')setTimeout(aiMove,100);
 }
 
 function openPromo(co){let modal=document.getElementById('promo'),box=document.getElementById('promos');box.innerHTML='';for(let p of ['Q','R','B','N']){let btn=document.createElement('button');btn.textContent=co==='w'?ICON[p]:ICON[p.toLowerCase()];btn.onclick=()=>{closePromo();let x=pendingPromotion;pendingPromotion=null;commit(x.r,x.c,x.rr,x.cc,p)};box.appendChild(btn)}modal.style.display='flex';render()}
@@ -289,23 +274,16 @@ function undo(){
   render();
 }
 
-const PST={P:[0,5,5,-10,-10,5,5,0,0,10,-5,0,0,-5,10,0,0,5,10,20,20,10,5,0,5,5,10,25,25,10,5,5,10,10,20,30,30,20,10,10,50,50,50,50,50,50,50,50,0,0,0,0,0,0,0,0],N:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,5,5,0,-20,-40,-30,5,10,15,15,10,5,-30,-30,0,15,20,20,15,0,-30,-30,5,15,20,20,15,5,-30,-30,0,10,15,15,10,0,-30,-40,-20,0,0,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],B:[-20,-10,-10,-10,-10,-10,-10,-20,-10,5,0,0,0,0,5,-10,-10,10,10,10,10,10,10,-10,-10,0,10,10,10,10,0,-10,-10,5,5,10,10,5,5,-10,-10,0,5,10,10,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-10,-10,-10,-10,-20],R:[0,0,0,5,5,0,0,0,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,5,10,10,10,10,10,10,5,10,10,10,10,10,10,10,10,0,0,0,0,0,0,0,0,0,0,0,5,5,0,0,0],Q:[-20,-10,-10,0,0,-10,-10,-20,-10,0,5,0,0,0,0,-10,-10,5,5,5,5,5,0,-10,0,0,5,5,5,5,0,-5,-5,0,5,5,5,5,0,-5,-10,0,5,5,5,5,0,-10,-10,0,0,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20]};
-
 function evaluate(b){
  let score=0;
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;let t=p.toUpperCase(),v=VALUE[t];let bonus=PST[t]?.[(p===p.toUpperCase()?r:7-r)*8+c]||0;score+=(col(p)==='b'?1:-1)*(v+bonus)}
- let bm=allMoves(b,'b',castle,ep).length,wm=allMoves(b,'w',castle,ep).length;
- score+=(bm-wm)*3;
- if(check(b,'w'))score+=45;
- if(check(b,'b'))score-=45;
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;let t=p.toUpperCase(),v=VALUE[t];score+=(col(p)==='b'?1:-1)*v}
  return score;
 }
 
 function minimaxAI(b,co,depth,alpha,beta,cast,eps){
  let moves=allMoves(b,co,cast,eps);
  if(depth===0)return evaluate(b);
- if(!moves.length)return check(b,co)?(co==='b'?-999999:999999):0;
- moves.sort((a,z)=>{let az=b[z[2]][z[3]],bz=b[a[2]][a[3]];return (az?VALUE[az.toUpperCase()]:0)-(bz?VALUE[bz.toUpperCase()]:0)});
+ if(!moves.length)return check(b,co)?(co==='b'?-99999:99999):0;
  if(co==='b'){
   let best=-Infinity;
   for(let m of moves){let promo=(b[m[0]][m[1]].toUpperCase()==='P'&&(m[2]===0||m[2]===7))?'Q':null,z=applyMove(b,...m,co,cast,eps,promo),v=minimaxAI(z.board,'w',depth-1,alpha,beta,z.castle,z.ep);best=Math.max(best,v);alpha=Math.max(alpha,v);if(beta<=alpha)break}
@@ -332,7 +310,7 @@ function aiMove(){
   let z=applyMove(board,best[0],best[1],best[2],best[3],'b',castle,ep,promotion);
   board=z.board;castle=z.castle;ep=z.ep;lastMove=[best[0],best[1],best[2],best[3]];turn='w';
   render();
- },20);
+ },50);
 }
 
 document.getElementById('new').onclick=reset;
@@ -340,9 +318,8 @@ document.getElementById('hintBtn').onclick=giveHint;
 document.getElementById('undo').onclick=undo;
 document.getElementById('level').onchange=()=>{updateEloUI();render()};
 
-updateEloUI();
 reset();
 </script>
-</div>
-</body></html>
+</body>
+</html>
 
