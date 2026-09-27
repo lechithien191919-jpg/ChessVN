@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Cờ vua AI — Full Features</title>
+<title>Cờ vua AI — Smart AI & Eval Bar</title>
 <style>
 :root{
   --bg:#07111f;--panel:rgba(15,27,45,.78);--panel2:rgba(30,41,59,.88);
@@ -49,7 +49,10 @@ h1{font-size:25px;margin:5px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
 .whitePiece{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .blackPiece{color:#111;text-shadow:0 1px 2px rgba(255,255,255,.6)}
 
-.history-container{width:min(520px,100%);margin:10px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-align:left}
+.eval-container{width:min(520px,100%);margin:8px auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:bold}
+#evalScore{color:var(--gold)}
+
+.history-container{width:min(520px,100%);margin:8px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-align:left}
 .history-title{font-size:12px;color:var(--muted);font-weight:bold;margin-bottom:3px}
 #history-box{font-size:13px;color:#cbd5e1;max-height:45px;overflow-y:auto;line-height:1.4}
 
@@ -78,6 +81,12 @@ h1{font-size:25px;margin:5px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
 <button id="hintBtn">💡 Gợi ý (1)</button>
 <button id="new">🔄 Ván mới</button>
 </div>
+
+<div class="eval-container">
+  <span>📊 Đánh giá thế trận:</span>
+  <span id="evalScore">Cân bằng (0.0)</span>
+</div>
+
 <div id="status">Đang khởi tạo bàn cờ...</div>
 <div class="wrap"><div id="board" class="board"></div></div>
 
@@ -100,8 +109,17 @@ const ICON={P:'♙',N:'♘',B:'♗',R:'♖',Q:'♕',K:'♔',p:'♟',n:'♞',b:'�
 const VALUE={P:100,N:320,B:330,R:500,Q:900,K:20000};
 const KN=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
 const DIRB=[[1,1],[1,-1],[-1,1],[-1,-1]],DIRR=[[1,0],[-1,0],[0,1],[0,-1]];
-let board,turn,selected=null,history=[],historyText=[],castle,ep,pendingPromotion=null,lastMove=null,gameOver=false,thinking=false;
 
+const PST={
+  P:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
+  N:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+  B:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,10,0,-10,10,10,10,10,10,10,-10,-10,5,0,5,5,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+  R:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0,0,0,0,0,0,0,0,0],
+  Q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+  K:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
+};
+
+let board,turn,selected=null,history=[],historyText=[],castle,ep,pendingPromotion=null,lastMove=null,gameOver=false,thinking=false;
 let playerElo=Number(localStorage.getItem('chessPlayerElo')||1000);
 let gameResultRecorded=false;
 let hintsAvailable=1, undoUses=0, undoLimit=2;
@@ -164,7 +182,7 @@ function opp(c){return c==='w'?'b':'w'}
 function inside(r,c){return r>=0&&r<8&&c>=0&&c<8}
 function cloneBoard(b){return b.map(row=>row.slice())}
 function state(){return {board:cloneBoard(board),turn,castle:{...castle},ep:ep?[...ep]:null,lastMove:lastMove?[...lastMove]:null,historyText:[...historyText]}}
-function restore(s){board=cloneBoard(s.board);turn=s.turn;castle={...s.castle};ep=s.ep?[...s.ep]:null;lastMove=s.lastMove?[...s.lastMove]:null;historyText=[...s.historyText];selected=null;gameOver=false}
+function restore(s){board=cloneBoard(s.board);turn=s.turn;castle={...s.castle};ep=s.ep?[...s.ep]:null;lastMove=s.lastMove?[...s.lastMove]:null;historyText:[...s.historyText];selected=null;gameOver=false}
 
 function kingPos(b,c){for(let r=0;r<8;r++)for(let x=0;x<8;x++)if(b[r][x]===(c==='w'?'K':'k'))return [r,x];return null}
 
@@ -201,11 +219,33 @@ function applyMove(b,r,c,rr,cc,co,cast,epSquare,promo){
  if(t==='P'&&epSquare&&rr===epSquare[0]&&cc===epSquare[1]&&!dest)nb[rr+(co==='w'?1:-1)][cc]=null;
  if(t==='P'&&Math.abs(rr-r)===2)nep=[(r+rr)/2,c];
  if(t==='K'){ncast[co==='w'?'K':'k']=false;ncast[co==='w'?'Q':'q']=false;if(Math.abs(cc-c)===2){let rc=cc>c?7:0,tc=cc>c?5:3;nb[rr][tc]=nb[rr][rc];nb[rr][rc]=null}}
+ if(t==='R'){if(r===7&&c===0)ncast.Q=false;if(r===7&&c===7)ncast.K=false;if(r===0&&c===0)ncast.q=false;if(r===0&&c===7)ncast.k=false}
  return {board:nb,castle:ncast,ep:nep};
 }
 
 function legalMoves(b,r,c,co,cast=castle,epSquare=ep){let p=b[r][c];if(!p||col(p)!==co)return[];let out=[];for(let [rr,cc] of pseudo(b,r,c,co)){let z=applyMove(b,r,c,rr,cc,co,cast,epSquare,null);if(!check(z.board,co))out.push([rr,cc])}return out}
 function allMoves(b,co,cast,epSquare){let a=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(col(b[r][c])===co)for(let [rr,cc] of legalMoves(b,r,c,co,cast,epSquare))a.push([r,c,rr,cc]);return a}
+
+function evaluate(b){
+ let score=0;
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+  let p=b[r][c];if(!p)continue;
+  let t=p.toUpperCase(),v=VALUE[t];
+  let pSTRow = (p===p.toUpperCase()) ? r : (7-r);
+  let bonus = PST[t] ? PST[t][pSTRow*8 + c] : 0;
+  score += (col(p)==='w' ? 1 : -1) * (v + bonus);
+ }
+ return score;
+}
+
+function updateEvalBar(){
+ let sc = evaluate(board)/100;
+ let txt = '';
+ if(Math.abs(sc)<0.2) txt = 'Cân bằng (0.0)';
+ else if(sc>0) txt = `Trang ưu thế (+${sc.toFixed(1)})`;
+ else txt = `Đen ưu thế (${sc.toFixed(1)})`;
+ document.getElementById('evalScore').textContent = txt;
+}
 
 function render(){
  const el=document.getElementById('board');el.innerHTML='';let hints=selected?legalMoves(board,selected[0],selected[1],turn,castle,ep):[];
@@ -227,6 +267,7 @@ function render(){
   el.appendChild(s);
  }
 
+ updateEvalBar();
  let inC=check(board,turn),moves=allMoves(board,turn,castle,ep);gameOver=moves.length===0;let st=document.getElementById('status');
  if(gameOver){
     if(inC){let humanWon=turn==='b';recordElo(humanWon?'win':'loss');st.textContent=humanWon?'🏆 CHIẾU HẾT! Bạn thắng!':'💀 CHIẾU HẾT! Máy thắng.'}
@@ -274,16 +315,11 @@ function undo(){
   render();
 }
 
-function evaluate(b){
- let score=0;
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){let p=b[r][c];if(!p)continue;let t=p.toUpperCase(),v=VALUE[t];score+=(col(p)==='b'?1:-1)*v}
- return score;
-}
-
 function minimaxAI(b,co,depth,alpha,beta,cast,eps){
  let moves=allMoves(b,co,cast,eps);
  if(depth===0)return evaluate(b);
  if(!moves.length)return check(b,co)?(co==='b'?-99999:99999):0;
+ moves.sort((a,z)=>{let az=b[z[2]][z[3]],bz=b[a[2]][a[3]];return (az?VALUE[az.toUpperCase()]:0)-(bz?VALUE[bz.toUpperCase()]:0)});
  if(co==='b'){
   let best=-Infinity;
   for(let m of moves){let promo=(b[m[0]][m[1]].toUpperCase()==='P'&&(m[2]===0||m[2]===7))?'Q':null,z=applyMove(b,...m,co,cast,eps,promo),v=minimaxAI(z.board,'w',depth-1,alpha,beta,z.castle,z.ep);best=Math.max(best,v);alpha=Math.max(alpha,v);if(beta<=alpha)break}
