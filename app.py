@@ -15,10 +15,9 @@ def ai_move_endpoint():
     castle = data.get('castle')
     ep = data.get('ep')
     
-    # Gọi AI thông minh từ file riêng
     move = get_ai_move(board, level, castle, ep)
     return jsonify(move)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-  
+    
