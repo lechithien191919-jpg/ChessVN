@@ -12,68 +12,69 @@
 }
 *{box-sizing:border-box}
 body{
-  margin:0;min-height:100vh;padding:14px 10px 28px;color:var(--text);
+  margin:0;min-height:100vh;padding:18px 10px 28px;color:var(--text);
   font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;text-align:center;
   background:
     radial-gradient(circle at 15% 0%,rgba(59,130,246,.20),transparent 32%),
     radial-gradient(circle at 85% 10%,rgba(168,85,247,.16),transparent 30%),
     linear-gradient(145deg,#050b14,#0d1b2d 55%,#08111e);
 }
-h1{font-size:24px;letter-spacing:.5px;margin:4px 0 10px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
+h1{font-size:27px;letter-spacing:.5px;margin:4px 0 12px;text-shadow:0 4px 20px rgba(0,0,0,.35)}
 .app{width:min(720px,100%);margin:auto}
 .top,.panel,.stats{
   display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap
 }
-.top{margin:0 auto 8px}
+.top{margin:0 auto 10px}
 .top button,.top select{
-  border:1px solid var(--line);border-radius:12px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:12px;padding:9px 13px;
   background:var(--panel2);color:#fff;font-weight:750;cursor:pointer;
-  box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(10px);font-size:12px;
+  box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(10px)
 }
 .top button:hover,.top select:hover{background:#3a4a61}
 .top button:active{transform:translateY(1px) scale(.98)}
 #status{
-  min-height:26px;margin:5px auto 8px;padding:6px 12px;width:fit-content;max-width:95%;
+  min-height:28px;margin:7px auto 10px;padding:7px 12px;width:fit-content;max-width:95%;
   border:1px solid var(--line);border-radius:999px;background:rgba(15,23,42,.65);
-  color:#e6edf7;font-size:13px;font-weight:750
+  color:#e6edf7;font-size:14px;font-weight:750
 }
-.wrap{width:min(420px,100%);margin:0 auto;padding:0 7px}
+.wrap{width:min(560px,100%);margin:0 auto;padding:0 7px}
 .board{
   width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,1fr);
-  grid-template-rows:repeat(8,1fr);border:6px solid #172235;border-radius:14px;
+  grid-template-rows:repeat(8,1fr);border:7px solid #172235;border-radius:16px;
   overflow:hidden;box-shadow:0 20px 55px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.08);
   background:#172235
 }
-.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%;-webkit-tap-highlight-color:transparent;}
+.sq{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;width:100%;height:100%;transition:filter .12s}
+.sq:hover{filter:brightness(1.06)}
 .light{background:var(--light)} .dark{background:var(--dark)}
 .sq.selected{box-shadow:inset 0 0 0 4px var(--gold),inset 0 0 24px rgba(247,201,72,.25);z-index:2}
-.sq.hint:after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--green);opacity:.9;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:3;pointer-events:none;}
-.sq.capture:after{content:"";position:absolute;inset:5px;border:4px solid var(--red);border-radius:50%;box-shadow:0 0 10px rgba(255,93,108,.25);z-index:3;pointer-events:none;}
+.sq.hint:after{content:"";position:absolute;width:17px;height:17px;border-radius:50%;background:var(--green);opacity:.85;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.sq.capture:after{content:"";position:absolute;inset:6px;border:4px solid var(--red);border-radius:50%;box-shadow:0 0 10px rgba(255,93,108,.25)}
 .sq.last{box-shadow:inset 0 0 0 4px rgba(80,170,255,.65),inset 0 0 18px rgba(80,170,255,.16)}
-.piece{font-size:clamp(28px,7vw,42px);font-family:"Arial Unicode MS","Segoe UI Symbol",serif;user-select:none;line-height:1;z-index:1;pointer-events:none;}
+.piece{font-size:clamp(31px,8vw,54px);font-family:"Arial Unicode MS","Segoe UI Symbol",serif;user-select:none;line-height:1;z-index:1}
 .whitePiece{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.35),0 0 1px rgba(0,0,0,.2)}
 .blackPiece{color:#050505;text-shadow:0 1px 0 #777,0 0 2px #fff}
 
 /* Khung lịch sử nước đi */
-.history-container{width:min(420px,100%);margin:8px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:left;}
-.history-title{font-size:11px;color:var(--muted);font-weight:bold;margin-bottom:2px;}
-#history-box{font-size:12px;color:#cbd5e1;max-height:40px;overflow-y:auto;line-height:1.4;}
+.history-container{width:min(560px,100%);margin:10px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;text-align:left;}
+.history-title{font-size:12px;color:var(--muted);font-weight:bold;margin-bottom:3px;}
+#history-box{font-size:13px;color:#cbd5e1;max-height:50px;overflow-y:auto;line-height:1.4;}
 
-.stats{margin:10px auto 6px;max-width:420px;gap:6px;}
+.stats{margin:12px auto 7px;max-width:560px}
 .badge{
-  flex:1;min-width:110px;padding:7px 10px;border:1px solid var(--line);border-radius:11px;
-  background:var(--panel);box-shadow:0 7px 22px rgba(0,0,0,.15);font-size:12px
+  min-width:135px;padding:9px 12px;border:1px solid var(--line);border-radius:13px;
+  background:var(--panel);box-shadow:0 7px 22px rgba(0,0,0,.15);font-size:13px
 }
-.badge strong{display:block;font-size:15px;margin-top:2px}
-#eloChange{display:block}
+.badge strong{display:block;font-size:17px;margin-top:2px}
+#eloChange{display:none}
 .elo-up{color:#4ade80}.elo-down{color:#fb7185}.elo-draw{color:#facc15}
-.note{font-size:11px;color:var(--muted);margin:6px 10px;line-height:1.4}
+.note{font-size:12px;color:var(--muted);margin:9px 14px;line-height:1.45}
 #promo{position:fixed;z-index:20;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)}
 .modal{background:#101c2e;border:1px solid #40506a;border-radius:18px;padding:18px;box-shadow:0 25px 70px rgba(0,0,0,.7)}
 .modal h2{margin:0 0 13px;font-size:19px}
 .promos{display:flex;gap:9px}.promos button{width:64px;height:64px;font-size:40px;border:1px solid var(--line);border-radius:12px;background:#26364d;cursor:pointer;color:#fff}
 .promos button:hover{background:#3b4d66}
-@media(max-width:430px){body{padding-top:8px}h1{font-size:21px}}
+@media(max-width:430px){body{padding-top:10px}h1{font-size:23px}.board{border-width:5px;border-radius:12px}.badge{min-width:120px}}
 </style>
 </head>
 <body>
@@ -92,11 +93,11 @@ h1{font-size:24px;letter-spacing:.5px;margin:4px 0 10px;text-shadow:0 4px 20px r
 </div>
 
 <div class="stats">
-  <div class="badge">⚪ Bạn<strong id="playerElo">1000</strong></div>
-  <div class="badge">🤖 Máy<strong id="aiElo">1200</strong></div>
-  <div class="badge" id="eloBox">📈 Xếp hạng<strong id="eloChange">Chưa có</strong></div>
+  <div class="badge">⚪ Bạn: Trắng<strong id="playerElo">ELO 1000</strong></div>
+  <div class="badge">🤖 Máy: Đen<strong id="aiElo">ELO 1200</strong></div>
+  <div class="badge" id="eloBox">📈 Xếp hạng<strong id="eloChange">Chưa có ván</strong></div>
 </div>
-<div class="note">💡 Đã fix lỗi bấm di chuyển trên di động. Hỗ trợ đầy đủ chiếu hết, nhập thành, bắt tốt qua đường, phong cấp.</div>
+<div class="note">💡 Giữ nguyên thao tác mượt mà, bổ sung thêm lịch sử nước đi và tính năng gợi ý thông minh.</div>
 
 <div id="promo"><div class="modal"><h2>Chọn quân phong cấp</h2><div id="promos" class="promos"></div></div></div>
 <script>
@@ -106,7 +107,7 @@ const KN=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
 const DIRB=[[1,1],[1,-1],[-1,1],[-1,-1]],DIRR=[[1,0],[-1,0],[0,1],[0,-1]];
 let board,turn,selected=null,history=[],historyText=[],castle,ep,pendingPromotion=null,lastMove=null,gameOver=false,thinking=false;
 
-if(!localStorage.getItem('chessPlayerElo')){localStorage.setItem('chessPlayerElo','1000');}
+if(!localStorage.getItem('chessEloV2')){localStorage.setItem('chessPlayerElo','1000');localStorage.setItem('chessEloV2','1')}
 let playerElo=Number(localStorage.getItem('chessPlayerElo')||1000);
 let gameResultRecorded=false;
 let hintsAvailable=0;
@@ -141,8 +142,8 @@ function giveHint(){
 }
 
 function updateEloUI(changeText='', cls=''){
-  document.getElementById('playerElo'].textContent='ELO '+playerElo;
-  document.getElementById('aiElo'].textContent='ELO '+aiRating();
+  document.getElementById('playerElo').textContent='ELO '+playerElo;
+  document.getElementById('aiElo').textContent='ELO '+aiRating();
   const e=document.getElementById('eloChange');
   e.textContent=changeText||'Chưa có ván';
   e.className=cls;
@@ -164,7 +165,7 @@ function recordElo(result){
 function initial(){return [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],...Array(4).fill(null).map(()=>Array(8).fill(null)),['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']]}
 
 function reset(){
-  board=initial();turn='w';selected=null;history=[];historyText=[];castle={K:true,Q:true,k:true,q:true};ep=null;pendingPromotion=null;lastMove=null;gameOver=false;thinking=false;gameResultRecorded=false;undoUses=0;undoLimit=0;closePromo();updateEloUI();updateHintUI();render()
+  board=initial();turn='w';selected=null;history=[];historyText=[];castle={K:true,Q:true,k:true,q:true};ep=null;pendingPromotion=null;lastMove=null;gameOver=false;thinking=false;gameResultRecorded=false;undoUses=0;undoLimit=0;closePromo();updateEloUI();updateHintUI();render();
 }
 
 function col(p){return p?(p===p.toUpperCase()?'w':'b'):null} 
@@ -234,12 +235,7 @@ function render(){
    s.appendChild(sp);
   }
   
-  // Tối ưu sự kiện chạm/click cực nhạy trên di động
-  (function(row, colIdx){
-    s.addEventListener('click', (e)=>{ e.preventDefault(); click(row, colIdx); });
-    s.addEventListener('touchend', (e)=>{ e.preventDefault(); click(row, colIdx); }, {passive:false});
-  })(r, c);
-
+  s.onclick = () => click(r, c);
   el.appendChild(s);
  }
 
@@ -252,7 +248,18 @@ function render(){
   document.getElementById('history-box').textContent=historyText.length?historyText.join(', '):'Chưa có nước đi nào...';
 }
 
-function click(r,c){if(gameOver||thinking||turn!=='w'||pendingPromotion)return;if(selected){let m=legalMoves(board,selected[0],selected[1],turn,castle,ep);if(m.some(x=>x[0]===r&&x[1]===c)){humanMove(selected[0],selected[1],r,c);return}}selected=col(board[r][c])==='w'?[r,c]:null;render()}
+function click(r,c){
+  if(gameOver||thinking||turn!=='w'||pendingPromotion)return;
+  if(selected){
+    let m=legalMoves(board,selected[0],selected[1],turn,castle,ep);
+    if(m.some(x=>x[0]===r&&x[1]===c)){
+      humanMove(selected[0],selected[1],r,c);
+      return;
+    }
+  }
+  selected=col(board[r][c])==='w'?[r,c]:null;
+  render();
+}
 
 function humanMove(r,c,rr,cc){
  history.push(state());
@@ -321,7 +328,6 @@ function aiMove(){
   thinking=false;
   let p=board[best[0]][best[1]],promotion=p.toUpperCase()==='P'&&(best[2]===0||best[2]===7)?'Q':null;
   
-  let destPiece=board[best[2]][best[3]];
   historyText.push(p.toUpperCase()+(best[3]+1)+(8-best[2]));
   let z=applyMove(board,best[0],best[1],best[2],best[3],'b',castle,ep,promotion);
   board=z.board;castle=z.castle;ep=z.ep;lastMove=[best[0],best[1],best[2],best[3]];turn='w';
@@ -339,3 +345,4 @@ reset();
 </script>
 </div>
 </body></html>
+
